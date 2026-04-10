@@ -8,6 +8,8 @@ import { useColors } from "@/hooks/useColors";
 import { Store } from "@/types/store.types";
 import { BrandLogo } from "@/components/ui/BrandLogo";
 
+import { GlassCard } from "@/components/ui/GlassCard";
+
 interface StoreCardProps {
   store: Store;
   onPress: () => void;
@@ -18,61 +20,66 @@ export function StoreCard({ store, onPress }: StoreCardProps) {
 
   return (
     <TouchableOpacity
-      style={[styles.card, { backgroundColor: colors.white }]}
       onPress={onPress}
       activeOpacity={0.9}
     >
-      <View style={styles.imageContainer}>
-        <View style={[styles.imagePlaceholder, { backgroundColor: colors.gray100 }]}>
-          <BrandLogo size={48} />
-        </View>
-        <LinearGradient
-          colors={["rgba(0,0,0,0.4)", "transparent"]}
-          style={styles.imageOverlay}
-        />
-        <View style={[styles.timeBadge, { backgroundColor: colors.white }]}>
-          <Text style={[styles.timeText, { color: colors.textPrimary }]}>
-            12 MINS
-          </Text>
-        </View>
-      </View>
-
-      <View style={styles.content}>
-        <View style={styles.titleRow}>
-          <Text style={[styles.name, { color: colors.textPrimary }]} numberOfLines={1}>
-            {store.name}
-          </Text>
-          <View style={[styles.ratingBadge, { backgroundColor: "#EBFBEE" }]}>
-            <Text style={[styles.ratingText, { color: "#2E7D32" }]}>{store.rating.toFixed(1)}</Text>
-            <Feather name="star" size={10} color="#2E7D32" />
+      <GlassCard 
+        style={styles.card} 
+        intensity={10} 
+        borderRadius={24}
+      >
+        <View style={styles.imageContainer}>
+          <View style={[styles.imagePlaceholder, { backgroundColor: colors.gray100 }]}>
+            <BrandLogo size={48} />
+          </View>
+          <LinearGradient
+            colors={["rgba(0,0,0,0.3)", "transparent"]}
+            style={styles.imageOverlay}
+          />
+          <View style={[styles.timeBadge, { backgroundColor: colors.white }]}>
+            <Text style={[styles.timeText, { color: colors.textPrimary }]}>
+              12 MINS
+            </Text>
           </View>
         </View>
 
-        <Text style={[styles.address, { color: colors.textSecondary }]} numberOfLines={1}>
-          {store.address}, {store.city}
-        </Text>
-
-        <View style={styles.footer}>
-          <View style={styles.featureRow}>
-            <View style={[styles.featureIcon, { backgroundColor: colors.primaryLight }]}>
-              <Feather name="zap" size={10} color={colors.primary} />
-            </View>
-            <Text style={[styles.featureText, { color: colors.textSecondary }]}>Free Delivery</Text>
-          </View>
-          <View style={styles.dot} />
-          <Text style={[styles.featureText, { color: colors.textSecondary }]}>
-            {store.distance?.toFixed(1) ?? "0.8"} km
-          </Text>
-        </View>
-
-        {!store.isOpen && (
-          <View style={[styles.closedOverlay, { backgroundColor: "rgba(255,255,255,0.7)" }]}>
-            <View style={styles.closedBadge}>
-              <Text style={styles.closedText}>CLOSED</Text>
+        <View style={styles.content}>
+          <View style={styles.titleRow}>
+            <Text style={[styles.name, { color: colors.textPrimary }]} numberOfLines={1}>
+              {store.name}
+            </Text>
+            <View style={[styles.ratingBadge, { backgroundColor: colors.successLight }]}>
+              <Text style={[styles.ratingText, { color: colors.success }]}>{store.rating.toFixed(1)}</Text>
+              <Feather name="star" size={10} color={colors.success} />
             </View>
           </View>
-        )}
-      </View>
+
+          <Text style={[styles.address, { color: colors.textSecondary }]} numberOfLines={1}>
+            {store.address}, {store.city}
+          </Text>
+
+          <View style={styles.footer}>
+            <View style={styles.featureRow}>
+              <View style={[styles.featureIcon, { backgroundColor: colors.primaryLight }]}>
+                <Feather name="zap" size={10} color={colors.primary} />
+              </View>
+              <Text style={[styles.featureText, { color: colors.textSecondary }]}>Free Delivery</Text>
+            </View>
+            <View style={styles.dot} />
+            <Text style={[styles.featureText, { color: colors.textSecondary }]}>
+              {store.distance?.toFixed(1) ?? "0.8"} km
+            </Text>
+          </View>
+
+          {!store.isOpen && (
+            <View style={[styles.closedOverlay, { backgroundColor: "rgba(255,255,255,0.7)" }]}>
+              <View style={styles.closedBadge}>
+                <Text style={styles.closedText}>CLOSED</Text>
+              </View>
+            </View>
+          )}
+        </View>
+      </GlassCard>
     </TouchableOpacity>
   );
 }
@@ -86,13 +93,13 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     ...Platform.select({
       ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.05,
-        shadowRadius: 10,
+        shadowColor: "#B46414",
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.12,
+        shadowRadius: 24,
       },
       web: {
-        boxShadow: "0 4px 20px rgba(0,0,0,0.06)",
+        boxShadow: "0 8px 30px rgba(180, 100, 20, 0.08)",
       }
     })
   },
@@ -117,13 +124,15 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 8,
     left: 8,
-    paddingHorizontal: 6,
-    paddingVertical: 3,
-    borderRadius: 6,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    shadowColor: "#B46414",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.8)",
   },
   timeText: {
     fontSize: 10,

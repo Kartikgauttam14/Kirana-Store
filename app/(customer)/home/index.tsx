@@ -9,6 +9,7 @@ import {
   Text,
   TouchableOpacity,
   View,
+  Dimensions,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
@@ -17,21 +18,36 @@ import { LinearGradient } from "expo-linear-gradient";
 import { StoreCard } from "@/components/customer/StoreCard";
 import { useData } from "@/context/DataContext";
 import { useColors } from "@/hooks/useColors";
+import { useAuthStore } from "@/store/authStore";
 import { PRODUCT_CATEGORIES } from "@/constants/categories";
+import { BlurView } from "expo-blur";
 import { GlassCard } from "@/components/ui/GlassCard";
+
+const { width } = Dimensions.get("window");
 
 export default function CustomerHomeScreen() {
   const colors = useColors();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { stores } = useData();
+  const language = useAuthStore((s) => s.language);
 
   const openStores = useMemo(() => stores.filter((s) => s.isOpen && s.isActive), [stores]);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
+      {/* Decorative Brand Element */}
+      <View style={[styles.decorativeCircle, { backgroundColor: colors.primary + "10" }]} />
+      
       {/* Sticky Header */}
-      <View style={[styles.header, { paddingTop: insets.top + (Platform.OS === "web" ? 20 : 10), backgroundColor: colors.white }]}>
+      <BlurView 
+        intensity={60} 
+        tint="light" 
+        style={[styles.header, { 
+          paddingTop: insets.top + (Platform.OS === "web" ? 20 : 10), 
+          backgroundColor: Platform.OS === 'android' ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.6)',
+        }]}
+      >
         <View style={styles.headerContent}>
           <View style={styles.locationContainer}>
             <View style={[styles.locationIcon, { backgroundColor: colors.primaryLight }]}>
@@ -39,13 +55,18 @@ export default function CustomerHomeScreen() {
             </View>
             <View>
               <View style={styles.deliveryRow}>
-                <Text style={[styles.deliveryText, { color: colors.textPrimary }]}>Delivery in 10-15 mins</Text>
+                <Text style={[styles.deliveryText, { color: colors.textPrimary }]}>
+                  {language === 'hi' ? "10-15 मिनट में डिलीवरी" : "Delivery in 10-15 mins"}
+                </Text>
                 <Feather name="chevron-down" size={12} color={colors.textSecondary} />
               </View>
               <Text style={[styles.cityText, { color: colors.textSecondary }]}>New Delhi, India</Text>
             </View>
           </View>
-          <TouchableOpacity style={[styles.profileBtn, { backgroundColor: colors.gray100 }]}>
+          <TouchableOpacity 
+            style={[styles.profileBtn, { backgroundColor: colors.gray100 }]}
+            onPress={() => router.push("/(customer)/profile" as any)}
+          >
             <Feather name="user" size={20} color={colors.textPrimary} />
           </TouchableOpacity>
         </View>
@@ -57,10 +78,10 @@ export default function CustomerHomeScreen() {
         >
           <Feather name="search" size={18} color={colors.primary} />
           <Text style={[styles.searchPlaceholder, { color: colors.textPlaceholder }]}>
-            Search "milk", "eggs" or "bread"...
+            {language === 'hi' ? `"दूध", "अंडे" या "ब्रेड" खोजें...` : `Search "milk", "eggs" or "bread"...`}
           </Text>
         </TouchableOpacity>
-      </View>
+      </BlurView>
 
       <ScrollView
         contentContainerStyle={[styles.scroll, { paddingBottom: insets.bottom + 100 }]}
@@ -81,11 +102,11 @@ export default function CustomerHomeScreen() {
             style={styles.heroBanner}
           >
             <View style={styles.heroText}>
-              <Text style={styles.heroBadge}>WEEKEND SALE</Text>
-              <Text style={styles.heroTitle}>Up to 50% Off</Text>
-              <Text style={styles.heroSub}>On Household Essentials</Text>
+              <Text style={styles.heroBadge}>{language === 'hi' ? "वीकेंड सेल" : "WEEKEND SALE"}</Text>
+              <Text style={styles.heroTitle}>{language === 'hi' ? "50% तक की छूट" : "Up to 50% Off"}</Text>
+              <Text style={styles.heroSub}>{language === 'hi' ? "घर की ज़रूरी चीज़ों पर" : "On Household Essentials"}</Text>
               <TouchableOpacity style={styles.heroBtn}>
-                <Text style={[styles.heroBtnText, { color: colors.primary }]}>Shop Now</Text>
+                <Text style={[styles.heroBtnText, { color: colors.primary }]}>{language === 'hi' ? "अभी खरीदें" : "Shop Now"}</Text>
               </TouchableOpacity>
             </View>
             <View style={styles.heroOverlay}>
@@ -100,11 +121,11 @@ export default function CustomerHomeScreen() {
             style={styles.heroBanner}
           >
             <View style={styles.heroText}>
-              <Text style={styles.heroBadge}>NEW ARRIVALS</Text>
-              <Text style={styles.heroTitle}>Fresh Bakery</Text>
-              <Text style={styles.heroSub}>Delivered Warm from KiranaAI</Text>
+              <Text style={styles.heroBadge}>{language === 'hi' ? "नई आवक" : "NEW ARRIVALS"}</Text>
+              <Text style={styles.heroTitle}>{language === 'hi' ? "ताज़ा बेकरी" : "Fresh Bakery"}</Text>
+              <Text style={styles.heroSub}>{language === 'hi' ? "KiranaAI से ताज़ा और गर्म" : "Delivered Warm from KiranaAI"}</Text>
               <TouchableOpacity style={[styles.heroBtn, { backgroundColor: "#fff" }]}>
-                <Text style={[styles.heroBtnText, { color: colors.secondary }]}>Explore</Text>
+                <Text style={[styles.heroBtnText, { color: colors.secondary }]}>{language === 'hi' ? "देखें" : "Explore"}</Text>
               </TouchableOpacity>
             </View>
             <View style={styles.heroOverlay}>
@@ -116,9 +137,13 @@ export default function CustomerHomeScreen() {
         {/* Categories Bento Grid */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Categories</Text>
+            <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
+              {language === 'hi' ? "श्रेणियाँ" : "Categories"}
+            </Text>
             <TouchableOpacity>
-              <Text style={[styles.viewAll, { color: colors.primary }]}>See All</Text>
+              <Text style={[styles.viewAll, { color: colors.primary }]}>
+                {language === 'hi' ? "सभी देखें" : "See All"}
+              </Text>
             </TouchableOpacity>
           </View>
           <View style={styles.catGrid}>
@@ -132,7 +157,7 @@ export default function CustomerHomeScreen() {
                     <MaterialIcons name={cat.icon as any} size={32} color={colors.primary} />
                   </View>
                   <Text style={[styles.catLabel, { color: colors.textPrimary }]} numberOfLines={1}>
-                    {cat.label}
+                    {language === 'hi' ? (cat.labelHindi || cat.label) : cat.label}
                   </Text>
                 </TouchableOpacity>
               </Animated.View>
@@ -142,15 +167,19 @@ export default function CustomerHomeScreen() {
 
         {/* Flash Deals / Curated Section */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Stores Near You</Text>
-          <Text style={[styles.sectionSubtitle, { color: colors.textSecondary }]}>High rated stores in your locality</Text>
+          <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
+            {language === 'hi' ? "आपके आस-पास की दुकानें" : "Stores Near You"}
+          </Text>
+          <Text style={[styles.sectionSubtitle, { color: colors.textSecondary }]}>
+            {language === 'hi' ? "आपके इलाके में उच्च रेटिंग वाली दुकानें" : "High rated stores in your locality"}
+          </Text>
           
           <View style={styles.storeList}>
             {openStores.length === 0 ? (
               <GlassCard intensity={5} style={styles.emptyStores}>
                 <Feather name="map-pin" size={32} color={colors.textPlaceholder} />
                 <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-                  Searching for open stores...
+                  {language === 'hi' ? "खुली दुकानों की तलाश..." : "Searching for open stores..."}
                 </Text>
               </GlassCard>
             ) : (
@@ -175,16 +204,19 @@ export default function CustomerHomeScreen() {
   );
 }
 
-const { width } = Dimensions.get("window");
-
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  container: { flex: 1, backgroundColor: "#F7F4EF" },
   header: {
     paddingHorizontal: 20,
     paddingBottom: 16,
     zIndex: 10,
     borderBottomWidth: 1,
-    borderBottomColor: "#F1F5F9",
+    borderBottomColor: "rgba(0,0,0,0.03)",
+    shadowColor: "#B46414",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    elevation: 4,
   },
   headerContent: {
     flexDirection: "row",
@@ -231,6 +263,13 @@ const styles = StyleSheet.create({
     gap: 12,
     padding: 14,
     borderRadius: 14,
+    backgroundColor: "rgba(255,255,255,0.8)",
+    borderWidth: 1,
+    borderColor: "rgba(0,0,0,0.06)",
+    shadowColor: "#B46414",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
   },
   searchPlaceholder: {
     fontSize: 15,
@@ -361,6 +400,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
   },
+  decorativeCircle: {
+    position: "absolute",
+    top: -50,
+    left: -50,
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    zIndex: -1,
+  },
 });
-
-import { Dimensions } from "react-native";

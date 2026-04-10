@@ -14,6 +14,7 @@ import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { NetworkGuard } from "@/components/NetworkGuard";
 import { DataProvider } from "@/context/DataContext";
 import { useAuthStore } from "@/store/authStore";
 
@@ -27,14 +28,21 @@ function RootLayoutNav() {
   const segments = useSegments();
 
   useEffect(() => {
+    const inAuthGroup = segments[0] === "(auth)";
+    const inOwnerGroup = segments[0] === "(owner)";
+    const inCustomerGroup = segments[0] === "(customer)";
+    const isRoot = segments.length === 0;
+
     if (!token) {
-      router.replace("/(auth)/role-select");
-    } else if (role === "STORE_OWNER") {
+      if (!inAuthGroup && !isRoot) {
+        router.replace("/(auth)/role-select");
+      }
+    } else if (role === "STORE_OWNER" && !inOwnerGroup && !isRoot) {
       router.replace("/(owner)/dashboard");
-    } else if (role === "CUSTOMER") {
+    } else if (role === "CUSTOMER" && !inCustomerGroup && !isRoot) {
       router.replace("/(customer)/home");
     }
-  }, [token, role]);
+  }, [token, role, segments]);
 
   return (
     <Stack screenOptions={{ headerShown: false }}>
@@ -70,6 +78,7 @@ export default function RootLayout() {
             <KeyboardProvider>
               <DataProvider>
                 <RootLayoutNav />
+                <NetworkGuard />
               </DataProvider>
             </KeyboardProvider>
           </GestureHandlerRootView>

@@ -6,6 +6,9 @@ import { Forecast } from "@/types/forecast.types";
 import { Product } from "@/types/inventory.types";
 import { Order } from "@/types/order.types";
 import { Store } from "@/types/store.types";
+import { supabase } from "@/lib/supabase";
+import { isSupabaseReady } from "@/lib/supabase";
+import { enqueueMutation, processSyncQueue } from "@/lib/syncQueue";
 
 interface DataContextType {
   // Stores
@@ -166,6 +169,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const load = async () => {
       try {
+        // 1. Load local cache first (instant boot)
         const raw = await AsyncStorage.getItem(STORAGE_KEY);
         if (raw) {
           const data: PersistedData = JSON.parse(raw);
@@ -182,6 +186,88 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       } catch (_) {
       } finally {
         setIsLoading(false);
+      }
+
+      // 2. Background: Attempt cloud hydration from Supabase
+      try {
+        const { data: cloudProducts, error: pErr } = await supabase
+          .from("products")
+          .select("*")
+          .order("created_at", { ascending: false });
+
+        if (!pErr && cloudProducts && cloudProducts.length > 0) {
+          const mapped: Product[] = cloudProducts.map((p: any) => ({
+            id: p.id,
+            storeId: p.store_id,
+            name: p.name,
+            nameHindi: p.name_hindi,
+            category: p.category,
+            sku: p.sku,
+            barcode: p.barcode,
+            unit: p.unit,
+            costPrice: p.cost_price,
+            sellingPrice: p.selling_price,
+            currentStock: p.current_stock,
+            reorderLevel: p.reorder_level,
+            reorderQty: p.reorder_qty,
+            gstRate: p.gst_rate,
+            supplierName: p.supplier_name,
+            supplierPhone: p.supplier_phone,
+            isActive: p.is_active ?? true,
+            createdAt: p.created_at,
+            updatedAt: p.updated_at,
+          }));
+          setProducts((local) => {
+            // Merge: cloud records win for same ID, keep local-only entries
+            const cloudIds = new Set(mapped.map((p) => p.id));
+            const localOnly = local.filter((p) => !cloudIds.has(p.id));
+            return [...mapped, ...localOnly];
+          });
+          console.log(`[Sync] Hydrated ${cloudProducts.length} products from Supabase`);
+        }
+
+        const { data: cloudOrders, error: oErr } = await supabase
+          .from("orders")
+          .select("*")
+          .order("created_at", { ascending: false })
+          .limit(50);
+
+        if (!oErr && cloudOrders && cloudOrders.length > 0) {
+          setOrders((local) => {
+            const cloudIds = new Set(cloudOrders.map((o: any) => o.id));
+            const localOnly = local.filter((o) => !cloudIds.has(o.id));
+            const mapped = cloudOrders.map((o: any) => ({
+              id: o.id,
+              customerId: o.customer_id,
+              storeId: o.store_id,
+              storeName: "",
+              orderNumber: o.id?.slice(-6) ?? "",
+              status: o.status,
+              deliveryAddress: o.delivery_address ?? "",
+              subtotal: o.total_amount,
+              deliveryFee: 0,
+              discount: 0,
+              grandTotal: o.total_amount,
+              paymentMode: o.payment_mode ?? "UPI",
+              isPaid: true,
+              items: o.items ?? [],
+              createdAt: o.created_at,
+              updatedAt: o.updated_at,
+            }));
+            return [...mapped, ...localOnly];
+          });
+          console.log(`[Sync] Hydrated ${cloudOrders.length} orders from Supabase`);
+        }
+      } catch (syncErr) {
+        // Graceful failure — app works fine with local cache
+        console.log("[Sync] Cloud hydration skipped (offline or not configured):", syncErr);
+      }
+
+      // 3. Process any queued mutations from previous failed syncs
+      if (isSupabaseReady) {
+        processSyncQueue().then((count) => {
+          if (count > 0) console.log(`[SyncQueue] Replayed ${count} pending mutations`);
+        });
       }
     };
     load();
@@ -210,6 +296,29 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     setStores((prev) => {
       const updated = [...prev, store];
       persist({ stores: updated });
+
+      supabase.from("stores").insert({
+        id: store.id,
+        owner_id: store.ownerId,
+        name: store.name,
+        phone: store.phone,
+        gst_number: store.gstNumber,
+        fssai_number: store.fssaiNumber,
+        latitude: store.latitude,
+        longitude: store.longitude,
+        address: store.address,
+        city: store.city,
+        pincode: store.pincode,
+        delivery_radius: store.deliveryRadius,
+        min_order_value: store.minOrderValue,
+        open_time: store.openTime,
+        close_time: store.closeTime,
+        is_open: store.isOpen,
+        is_active: store.isActive,
+      }).then(({ error }) => {
+         if (error) console.log("Supabase Store Add Error:", error);
+      });
+
       return updated;
     });
   }, [persist]);
@@ -218,6 +327,28 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     setStores((prev) => {
       const updated = prev.map((s) => (s.id === id ? { ...s, ...updates } : s));
       persist({ stores: updated });
+
+      // Dual-write: Push store updates to Supabase
+      const payload: Record<string, unknown> = {};
+      if (updates.name !== undefined) payload.name = updates.name;
+      if (updates.phone !== undefined) payload.phone = updates.phone;
+      if (updates.address !== undefined) payload.address = updates.address;
+      if (updates.city !== undefined) payload.city = updates.city;
+      if (updates.pincode !== undefined) payload.pincode = updates.pincode;
+      if (updates.isOpen !== undefined) payload.is_open = updates.isOpen;
+      if (updates.isActive !== undefined) payload.is_active = updates.isActive;
+      if (updates.openTime !== undefined) payload.open_time = updates.openTime;
+      if (updates.closeTime !== undefined) payload.close_time = updates.closeTime;
+      if (updates.deliveryRadius !== undefined) payload.delivery_radius = updates.deliveryRadius;
+      if (updates.minOrderValue !== undefined) payload.min_order_value = updates.minOrderValue;
+
+      if (Object.keys(payload).length > 0) {
+        supabase.from("stores").update(payload).eq("id", id)
+          .then(({ error }) => {
+            if (error) console.log("Supabase Sync UpdateStore Error:", error);
+          });
+      }
+
       return updated;
     });
   }, [persist]);
@@ -226,6 +357,43 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     setProducts((prev) => {
       const updated = [...prev, product];
       persist({ products: updated });
+      // Dual-write: Push to Supabase
+      supabase.from("products").insert({
+        id: product.id,
+        store_id: product.storeId,
+        name: product.name,
+        name_hindi: product.nameHindi,
+        category: product.category,
+        sku: product.sku,
+        unit: product.unit,
+        cost_price: product.costPrice,
+        selling_price: product.sellingPrice,
+        current_stock: product.currentStock,
+        reorder_level: product.reorderLevel,
+        reorder_qty: product.reorderQty,
+        gst_rate: product.gstRate,
+        is_active: product.isActive,
+      }).then(({ error }) => {
+        if (error) {
+          console.log("Supabase Sync AddProduct Error (queued for retry):", error);
+          enqueueMutation("products", "insert", {
+            id: product.id,
+            store_id: product.storeId,
+            name: product.name,
+            name_hindi: product.nameHindi,
+            category: product.category,
+            sku: product.sku,
+            unit: product.unit,
+            cost_price: product.costPrice,
+            selling_price: product.sellingPrice,
+            current_stock: product.currentStock,
+            reorder_level: product.reorderLevel,
+            reorder_qty: product.reorderQty,
+            gst_rate: product.gstRate,
+            is_active: product.isActive,
+          });
+        }
+      });
       return updated;
     });
   }, [persist]);
@@ -234,6 +402,28 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     setProducts((prev) => {
       const updated = prev.map((p) => (p.id === id ? { ...p, ...updates } : p));
       persist({ products: updated });
+      
+      // Dual-write: Push updates to Supabase
+      const payload: Record<string, unknown> = {};
+      if (updates.name !== undefined) payload.name = updates.name;
+      if (updates.nameHindi !== undefined) payload.name_hindi = updates.nameHindi;
+      if (updates.costPrice !== undefined) payload.cost_price = updates.costPrice;
+      if (updates.sellingPrice !== undefined) payload.selling_price = updates.sellingPrice;
+      if (updates.currentStock !== undefined) payload.current_stock = updates.currentStock;
+      if (updates.reorderLevel !== undefined) payload.reorder_level = updates.reorderLevel;
+      if (updates.reorderQty !== undefined) payload.reorder_qty = updates.reorderQty;
+      if (updates.gstRate !== undefined) payload.gst_rate = updates.gstRate;
+      if (updates.supplierName !== undefined) payload.supplier_name = updates.supplierName;
+      if (updates.supplierPhone !== undefined) payload.supplier_phone = updates.supplierPhone;
+      if (updates.isActive !== undefined) payload.is_active = updates.isActive;
+
+      if (Object.keys(payload).length > 0) {
+        supabase.from("products").update(payload).eq("id", id)
+          .then(({ error }) => {
+            if (error) console.log("Supabase Sync UpdateProduct Error:", error);
+          });
+      }
+        
       return updated;
     });
   }, [persist]);
@@ -242,6 +432,13 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     setProducts((prev) => {
       const updated = prev.filter((p) => p.id !== id);
       persist({ products: updated });
+      
+      // Dual-write: delete from Supabase
+      supabase.from("products").delete().eq("id", id)
+        .then(({ error }) => {
+          if (error) console.log("Supabase Sync DeleteProduct Error:", error);
+        });
+
       return updated;
     });
   }, [persist]);
@@ -255,6 +452,39 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     setBills((prev) => {
       const updated = [bill, ...prev];
       persist({ bills: updated });
+      
+      supabase.from("bills").insert({
+        id: bill.id,
+        store_id: bill.storeId,
+        bill_number: bill.billNumber,
+        customer_name: bill.customerName,
+        customer_phone: bill.customerPhone,
+        subtotal: bill.subtotal,
+        gst_total: bill.gstTotal,
+        discount: bill.discount,
+        grand_total: bill.grandTotal,
+        payment_mode: bill.paymentMode,
+        is_paid: bill.isPaid,
+        items: bill.items,
+      }).then(({ error }) => {
+         if (error) {
+           console.log("Supabase Bill Log Error (queued):", error);
+           enqueueMutation("bills", "insert", {
+             id: bill.id,
+             store_id: bill.storeId,
+             bill_number: bill.billNumber,
+             customer_name: bill.customerName,
+             subtotal: bill.subtotal,
+             gst_total: bill.gstTotal,
+             discount: bill.discount,
+             grand_total: bill.grandTotal,
+             payment_mode: bill.paymentMode,
+             is_paid: bill.isPaid,
+             items: bill.items,
+           });
+         }
+      });
+      
       return updated;
     });
   }, [persist]);
@@ -278,6 +508,20 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     setOrders((prev) => {
       const updated = [order, ...prev];
       persist({ orders: updated });
+
+      supabase.from("orders").insert({
+        id: order.id,
+        store_id: order.storeId,
+        customer_id: order.customerId,
+        status: order.status,
+        total_amount: order.grandTotal,
+        delivery_address: order.deliveryAddress,
+        payment_mode: order.paymentMode,
+        items: order.items,
+      }).then(({ error }) => {
+         if (error) console.log("Supabase Order Log Error:", error);
+      });
+
       return updated;
     });
   }, [persist]);
@@ -288,6 +532,13 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         o.id === id ? { ...o, status, updatedAt: new Date().toISOString() } : o
       );
       persist({ orders: updated });
+
+      // Dual-write: Push order status change to Supabase
+      supabase.from("orders").update({ status }).eq("id", id)
+        .then(({ error }) => {
+          if (error) console.log("Supabase Sync UpdateOrderStatus Error:", error);
+        });
+
       return updated;
     });
   }, [persist]);

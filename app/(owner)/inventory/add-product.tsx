@@ -1,4 +1,4 @@
-import { Feather } from "@expo/vector-icons";
+import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
@@ -12,13 +12,18 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  StatusBar,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { LinearGradient } from "expo-linear-gradient";
+import Animated, { FadeInDown, FadeInRight, FadeOutLeft } from "react-native-reanimated";
 
 import { useData } from "@/context/DataContext";
 import { useColors } from "@/hooks/useColors";
+import { useAuthStore } from "@/store/authStore";
 import { PRODUCT_CATEGORIES, UNITS, GST_RATES } from "@/constants/categories";
 import { Product } from "@/types/inventory.types";
+import { GlassCard } from "@/components/ui/GlassCard";
 
 type Step = 1 | 2 | 3 | 4;
 
@@ -27,6 +32,7 @@ export default function AddProductScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { activeStore, addProduct } = useData();
+  const language = useAuthStore((s) => s.language);
   const [step, setStep] = useState<Step>(1);
 
   const [form, setForm] = useState({
@@ -38,8 +44,8 @@ export default function AddProductScreen() {
     costPrice: "",
     sellingPrice: "",
     currentStock: "",
-    reorderLevel: "",
-    reorderQty: "",
+    reorderLevel: "10",
+    reorderQty: "20",
     gstRate: "5",
     hsnCode: "",
     supplierName: "",
@@ -60,7 +66,10 @@ export default function AddProductScreen() {
 
   const handleSave = () => {
     if (!form.name || !form.costPrice || !form.sellingPrice || !form.currentStock) {
-      Alert.alert("Required Fields", "Please fill all required fields");
+      Alert.alert(
+        language === 'hi' ? "आवश्यक फ़ील्ड" : "Required Fields", 
+        language === 'hi' ? "कृपया सभी आवश्यक फ़ील्ड भरें" : "Please fill all required fields"
+      );
       return;
     }
     const sku = `${form.category.toUpperCase()}-${Date.now().toString().slice(-6)}`;
@@ -88,191 +97,249 @@ export default function AddProductScreen() {
     };
     addProduct(product);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    Alert.alert("Success", "Product added successfully!", [
-      { text: "OK", onPress: () => router.back() },
-    ]);
+    Alert.alert(
+      language === 'hi' ? "आइटम जोड़ा गया!" : "Item Added!", 
+      language === 'hi' ? "उत्पाद सफलतापूर्वक आपके कैटलॉग में जोड़ दिया गया है।" : "Product has been successfully added to your catalog.",
+      [{ text: language === 'hi' ? "ठीक है" : "Done", onPress: () => router.back() }]
+    );
   };
 
-  const stepTitles = ["Basic Info", "Pricing & Stock", "Tax & Compliance", "Supplier"];
+  const stepTitles = language === 'hi' 
+    ? ["मूल जानकारी", "मूल्य निर्धारण और स्टॉक", "जीएसटी और टैक्स", "सप्लायर विवरण"]
+    : ["Basic Information", "Pricing & Stock", "GST & Tax Info", "Supplier Details"];
 
   return (
     <KeyboardAvoidingView
-      style={[
-        styles.container,
-        {
-          backgroundColor: colors.background,
-          paddingTop: insets.top + (Platform.OS === "web" ? 67 : 0),
-        },
-      ]}
+      style={[styles.container, { backgroundColor: colors.background }]}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
-        <TouchableOpacity onPress={() => (step === 1 ? router.back() : setStep((s) => (s - 1) as Step))}>
-          <Feather name="arrow-left" size={22} color={colors.textPrimary} />
-        </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Add Product</Text>
-        <View style={{ width: 22 }} />
+      <StatusBar barStyle="dark-content" />
+      <View style={[styles.header, { paddingTop: insets.top + (Platform.OS === "web" ? 20 : 0) }]}>
+         <TouchableOpacity 
+           onPress={() => (step === 1 ? router.back() : setStep((s) => (s - 1) as Step))}
+           style={styles.backBtn}
+         >
+           <Feather name="chevron-left" size={24} color={colors.textPrimary} />
+         </TouchableOpacity>
+         <View style={styles.headerInfo}>
+            <Text style={[styles.headerSubtitle, { color: colors.secondary }]}>
+              {language === 'hi' ? "नया उत्पाद जोड़ें" : "Add New Product"}
+            </Text>
+            <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>{stepTitles[step-1]}</Text>
+         </View>
+         <View style={styles.stepIndicator}>
+            <Text style={[styles.stepText, { color: colors.primary }]}>{step}<Text style={{color: colors.textPlaceholder}}>/4</Text></Text>
+         </View>
       </View>
 
-      <View style={styles.progress}>
-        {([1, 2, 3, 4] as Step[]).map((s) => (
+      <View style={styles.progressContainer}>
+        {[1, 2, 3, 4].map((s) => (
           <View
             key={s}
             style={[
-              styles.progressDot,
-              {
-                backgroundColor: s <= step ? colors.primary : colors.muted,
-                flex: 1,
-                height: s === step ? 4 : 3,
-              },
+              styles.progressSegment,
+              { backgroundColor: s <= step ? colors.primary : colors.gray200, flex: 1 }
             ]}
           />
         ))}
       </View>
-      <Text style={[styles.stepLabel, { color: colors.textSecondary }]}>
-        Step {step}/4 — {stepTitles[step - 1]}
-      </Text>
 
       <ScrollView
-        contentContainerStyle={[styles.form, { paddingBottom: insets.bottom + 100 }]}
+        contentContainerStyle={[styles.form, { paddingBottom: insets.bottom + 120 }]}
         keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
       >
-        {step === 1 && (
-          <>
-            <InputField label="Product Name *" value={form.name} onChangeText={(v) => update("name", v)} placeholder="e.g. Basmati Rice" colors={colors} />
-            <InputField label="हिंदी नाम (Optional)" value={form.nameHindi} onChangeText={(v) => update("nameHindi", v)} placeholder="जैसे बासमती चावल" colors={colors} />
-            <View style={styles.fieldGroup}>
-              <Text style={[styles.label, { color: colors.textSecondary }]}>Category</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                <View style={styles.chipRow}>
-                  {PRODUCT_CATEGORIES.map((cat) => (
-                    <TouchableOpacity
-                      key={cat.id}
-                      style={[
-                        styles.chip,
-                        {
-                          backgroundColor: form.category === cat.id ? colors.primary : colors.muted,
-                          borderColor: form.category === cat.id ? colors.primary : colors.border,
-                        },
-                      ]}
-                      onPress={() => update("category", cat.id)}
-                    >
-                      <Text style={[styles.chipText, { color: form.category === cat.id ? "#fff" : colors.textSecondary }]}>
-                        {cat.label}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
+        <Animated.View key={step} entering={FadeInRight.duration(300)}>
+          <GlassCard intensity={15} borderRadius={32} style={styles.stepCard}>
+             {step === 1 && (
+              <View style={styles.fields}>
+                <InputField label={language === 'hi' ? "उत्पाद का नाम *" : "Product Name *"} value={form.name} onChangeText={(v) => update("name", v)} placeholder="e.g. Organic Basmati Rice" colors={colors} icon="package-variant-closed" />
+                <InputField label={language === 'hi' ? "स्थानीय भाषा का नाम" : "Local Language Name"} value={form.nameHindi} onChangeText={(v) => update("nameHindi", v)} placeholder="उदा. बासमती चावल" colors={colors} icon="translate" />
+                
+                <View style={styles.group}>
+                  <Text style={[styles.label, { color: colors.textSecondary }]}>
+                    {language === 'hi' ? "श्रेणी" : "Category"}
+                  </Text>
+                  <View style={styles.chipGrid}>
+                    {PRODUCT_CATEGORIES.map((cat) => (
+                      <TouchableOpacity
+                        key={cat.id}
+                        style={[
+                          styles.chip,
+                          {
+                            backgroundColor: form.category === cat.id ? colors.primary : colors.gray100,
+                            borderColor: form.category === cat.id ? colors.primary : 'transparent',
+                          },
+                        ]}
+                        onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); update("category", cat.id); }}
+                      >
+                        <Text style={[styles.chipText, { color: form.category === cat.id ? "#fff" : colors.textPrimary }]}>
+                          {language === 'hi' ? cat.labelHindi || cat.label : cat.label}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
                 </View>
-              </ScrollView>
-            </View>
-            <View style={styles.fieldGroup}>
-              <Text style={[styles.label, { color: colors.textSecondary }]}>Unit</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                <View style={styles.chipRow}>
-                  {UNITS.map((u) => (
-                    <TouchableOpacity
-                      key={u.id}
-                      style={[
-                        styles.chip,
-                        {
-                          backgroundColor: form.unit === u.id ? colors.primary : colors.muted,
-                          borderColor: form.unit === u.id ? colors.primary : colors.border,
-                        },
-                      ]}
-                      onPress={() => update("unit", u.id)}
-                    >
-                      <Text style={[styles.chipText, { color: form.unit === u.id ? "#fff" : colors.textSecondary }]}>
-                        {u.id}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </ScrollView>
-            </View>
-            <InputField label="Barcode (Optional)" value={form.barcode} onChangeText={(v) => update("barcode", v)} placeholder="Scan or enter barcode" colors={colors} keyboardType="numeric" />
-          </>
-        )}
 
-        {step === 2 && (
-          <>
-            <InputField label="Cost Price (₹) *" value={form.costPrice} onChangeText={(v) => update("costPrice", v)} placeholder="0.00" colors={colors} keyboardType="numeric" />
-            <InputField label="Selling Price (₹) *" value={form.sellingPrice} onChangeText={(v) => update("sellingPrice", v)} placeholder="0.00" colors={colors} keyboardType="numeric" />
-            {margin && (
-              <View style={[styles.marginBox, { backgroundColor: parseFloat(margin) >= 0 ? colors.successLight : colors.dangerLight }]}>
-                <Text style={[styles.marginText, { color: parseFloat(margin) >= 0 ? colors.success : colors.danger }]}>
-                  Margin: {margin}%
-                </Text>
+                <View style={styles.group}>
+                  <Text style={[styles.label, { color: colors.textSecondary }]}>
+                    {language === 'hi' ? "माप की इकाई" : "Unit of Measurement"}
+                  </Text>
+                  <View style={styles.chipGrid}>
+                    {UNITS.map((u) => (
+                      <TouchableOpacity
+                        key={u.id}
+                        style={[
+                          styles.chip,
+                          {
+                            backgroundColor: form.unit === u.id ? colors.primary : colors.gray100,
+                            borderColor: form.unit === u.id ? colors.primary : 'transparent',
+                          },
+                        ]}
+                        onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); update("unit", u.id); }}
+                      >
+                        <Text style={[styles.chipText, { color: form.unit === u.id ? "#fff" : colors.textPrimary }]}>
+                          {u.id}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+                <InputField label={language === 'hi' ? "बारकोड / EAN" : "Barcode / EAN"} value={form.barcode} onChangeText={(v) => update("barcode", v)} placeholder="Scan or enter manually" colors={colors} icon="barcode-scan" keyboardType="numeric" />
               </View>
             )}
-            <InputField label="Current Stock *" value={form.currentStock} onChangeText={(v) => update("currentStock", v)} placeholder="0" colors={colors} keyboardType="numeric" />
-            <InputField label="Reorder Level" value={form.reorderLevel} onChangeText={(v) => update("reorderLevel", v)} placeholder="10" colors={colors} keyboardType="numeric" />
-            <InputField label="Reorder Quantity" value={form.reorderQty} onChangeText={(v) => update("reorderQty", v)} placeholder="20" colors={colors} keyboardType="numeric" />
-          </>
-        )}
 
-        {step === 3 && (
-          <>
-            <View style={styles.fieldGroup}>
-              <Text style={[styles.label, { color: colors.textSecondary }]}>GST Rate</Text>
-              <View style={styles.chipRow}>
-                {GST_RATES.map((r) => (
-                  <TouchableOpacity
-                    key={r}
-                    style={[
-                      styles.chip,
-                      {
-                        backgroundColor: form.gstRate === String(r) ? colors.primary : colors.muted,
-                        borderColor: form.gstRate === String(r) ? colors.primary : colors.border,
-                      },
-                    ]}
-                    onPress={() => update("gstRate", String(r))}
-                  >
-                    <Text style={[styles.chipText, { color: form.gstRate === String(r) ? "#fff" : colors.textSecondary }]}>
-                      {r}%
+            {step === 2 && (
+              <View style={styles.fields}>
+                <View style={styles.row}>
+                   <View style={{flex: 1}}>
+                      <InputField label={language === 'hi' ? "लागत मूल्य *" : "Cost Price *"} value={form.costPrice} onChangeText={(v) => update("costPrice", v)} placeholder="₹0.00" colors={colors} keyboardType="decimal-pad" icon="arrow-down-circle-outline" />
+                   </View>
+                   <View style={{flex: 1}}>
+                      <InputField label={language === 'hi' ? "विक्रय मूल्य *" : "Selling Price *"} value={form.sellingPrice} onChangeText={(v) => update("sellingPrice", v)} placeholder="₹0.00" colors={colors} keyboardType="decimal-pad" icon="arrow-up-circle-outline" />
+                   </View>
+                </View>
+
+                {margin && (
+                  <View style={[styles.marginBanner, { backgroundColor: parseFloat(margin) >= 0 ? colors.success + '10' : colors.danger + '10' }]}>
+                    <MaterialCommunityIcons name={parseFloat(margin) >= 0 ? "trending-up" : "trending-down"} size={18} color={parseFloat(margin) >= 0 ? colors.success : colors.danger} />
+                    <Text style={[styles.marginLabel, { color: colors.textSecondary }]}>
+                      {language === 'hi' ? "लाभ मार्जिन:" : "Profit Margin:"}
                     </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </View>
-            <InputField label="HSN Code (Optional)" value={form.hsnCode} onChangeText={(v) => update("hsnCode", v)} placeholder="e.g. 1006" colors={colors} keyboardType="numeric" />
-          </>
-        )}
+                    <Text style={[styles.marginVal, { color: parseFloat(margin) >= 0 ? colors.success : colors.danger }]}>{margin}%</Text>
+                  </View>
+                )}
 
-        {step === 4 && (
-          <>
-            <InputField label="Supplier Name" value={form.supplierName} onChangeText={(v) => update("supplierName", v)} placeholder="e.g. Ramesh Traders" colors={colors} />
-            <InputField label="Supplier Phone" value={form.supplierPhone} onChangeText={(v) => update("supplierPhone", v)} placeholder="10-digit mobile number" colors={colors} keyboardType="phone-pad" />
-          </>
-        )}
+                <InputField label={language === 'hi' ? "प्रारंभिक स्टॉक स्तर *" : "Initial Stock Level *"} value={form.currentStock} onChangeText={(v) => update("currentStock", v)} placeholder="0" colors={colors} icon="archive-outline" keyboardType="numeric" />
+                
+                <View style={styles.row}>
+                   <View style={{flex: 1}}>
+                     <InputField label={language === 'hi' ? "लो स्टॉक अलर्ट" : "Low Stock Alert"} value={form.reorderLevel} onChangeText={(v) => update("reorderLevel", v)} placeholder="10" colors={colors} keyboardType="numeric" />
+                   </View>
+                   <View style={{flex: 1}}>
+                     <InputField label={language === 'hi' ? "पुनः ऑर्डर मात्रा" : "Reorder Qty"} value={form.reorderQty} onChangeText={(v) => update("reorderQty", v)} placeholder="20" colors={colors} keyboardType="numeric" />
+                   </View>
+                </View>
+              </View>
+            )}
+
+            {step === 3 && (
+              <View style={styles.fields}>
+                <View style={styles.group}>
+                  <Text style={[styles.label, { color: colors.textSecondary }]}>
+                    {language === 'hi' ? "जीएसटी दर (%)" : "GST Rate (%)"}
+                  </Text>
+                  <View style={styles.chipGrid}>
+                    {GST_RATES.map((r) => (
+                      <TouchableOpacity
+                        key={r}
+                        style={[
+                          styles.chip,
+                          {
+                            backgroundColor: form.gstRate === String(r) ? colors.primary : colors.gray100,
+                            flex: 1,
+                          },
+                        ]}
+                        onPress={() => update("gstRate", String(r))}
+                      >
+                        <Text style={[styles.chipText, { color: form.gstRate === String(r) ? "#fff" : colors.textPrimary }]}>
+                          {r}%
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+                <InputField label={language === 'hi' ? "HSN कोड" : "HSN Code"} value={form.hsnCode} onChangeText={(v) => update("hsnCode", v)} placeholder="Enter 4-8 digit code" colors={colors} icon="file-document-outline" keyboardType="numeric" />
+                
+                <View style={[styles.infoCard, { backgroundColor: colors.primary + '08' }]}>
+                   <MaterialCommunityIcons name="information-outline" size={20} color={colors.primary} />
+                   <Text style={[styles.infoText, { color: colors.textSecondary }]}>
+                     {language === 'hi' 
+                        ? "HSN कोड स्वचालित कर गणना और पेशेवर इनवॉइसिंग में मदद करते हैं।"
+                        : "HSN Codes help in automated tax calculation and professional invoicing."}
+                   </Text>
+                </View>
+              </View>
+            )}
+
+            {step === 4 && (
+              <View style={styles.fields}>
+                <InputField label={language === 'hi' ? "सप्लायर / वेंडर का नाम" : "Supplier / Vendor Name"} value={form.supplierName} onChangeText={(v) => update("supplierName", v)} placeholder="e.g. Wholesale Mart" colors={colors} icon="truck-outline" />
+                <InputField label={language === 'hi' ? "वेंडर फोन" : "Vendor Phone"} value={form.supplierPhone} onChangeText={(v) => update("supplierPhone", v)} placeholder="+91 XXXXXXXXXX" colors={colors} icon="phone-outline" keyboardType="phone-pad" />
+                
+                <View style={[styles.smartFeature, { backgroundColor: colors.success + '08' }]}>
+                   <View style={styles.smartBadge}>
+                      <MaterialCommunityIcons name="creation" size={12} color={colors.success} />
+                      <Text style={[styles.smartText, { color: colors.success }]}>
+                        {language === 'hi' ? "स्मार्ट फीचर" : "Smart Feature"}
+                      </Text>
+                   </View>
+                   <Text style={[styles.featureDesc, { color: colors.textSecondary }]}>
+                     {language === 'hi'
+                        ? "किराना एआई बिक्री की गति और सप्लायर समय के आधार पर पुन: ऑर्डर का सुझाव देगा।"
+                        : "KiranaAI will suggest reorders based on sales velocity and supplier lead times."}
+                   </Text>
+                </View>
+              </View>
+            )}
+          </GlassCard>
+        </Animated.View>
       </ScrollView>
 
-      <View
-        style={[
-          styles.footer,
-          {
-            backgroundColor: colors.card,
-            borderTopColor: colors.border,
-            paddingBottom: insets.bottom + (Platform.OS === "web" ? 34 : 16),
-          },
-        ]}
-      >
-        {step < 4 ? (
+      <View style={[styles.footer, { paddingBottom: insets.bottom + 16 }]}>
+        <LinearGradient
+           colors={['rgba(255,255,255,0)', '#fff']}
+           style={styles.footerGradient}
+           pointerEvents="none"
+        />
+        <View style={styles.actionsRow}>
+          {step > 1 && (
+             <TouchableOpacity
+               style={[styles.prevBtn, { backgroundColor: colors.gray100 }]}
+               onPress={() => setStep((s) => (s - 1) as Step)}
+             >
+               <Feather name="chevron-left" size={20} color={colors.textPrimary} />
+             </TouchableOpacity>
+          )}
+          
           <TouchableOpacity
-            style={[styles.nextBtn, { backgroundColor: colors.primary }]}
-            onPress={() => setStep((s) => (s + 1) as Step)}
+            style={[styles.mainBtn, { backgroundColor: step === 4 ? colors.success : colors.primary, flex: 1 }]}
+            onPress={() => {
+               if(step < 4) {
+                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                 setStep((s) => (s + 1) as Step);
+               } else {
+                 handleSave();
+               }
+            }}
+            activeOpacity={0.8}
           >
-            <Text style={styles.nextBtnText}>Next</Text>
-            <Feather name="arrow-right" size={18} color="#fff" />
+            <View style={styles.btnContent}>
+               <Text style={styles.btnText}>{step === 4 ? "Save Product" : "Continue"}</Text>
+               <Feather name={step === 4 ? "check" : "chevron-right"} size={20} color="#fff" />
+            </View>
           </TouchableOpacity>
-        ) : (
-          <TouchableOpacity
-            style={[styles.nextBtn, { backgroundColor: colors.success }]}
-            onPress={handleSave}
-          >
-            <Feather name="check" size={18} color="#fff" />
-            <Text style={styles.nextBtnText}>Save Product</Text>
-          </TouchableOpacity>
-        )}
+        </View>
       </View>
     </KeyboardAvoidingView>
   );
@@ -285,6 +352,7 @@ function InputField({
   placeholder,
   colors,
   keyboardType,
+  icon,
 }: {
   label: string;
   value: string;
@@ -292,18 +360,23 @@ function InputField({
   placeholder: string;
   colors: ReturnType<typeof import("@/hooks/useColors").useColors>;
   keyboardType?: any;
+  icon?: keyof typeof MaterialCommunityIcons.glyphMap;
 }) {
   return (
-    <View style={styles.fieldGroup}>
-      <Text style={[styles.label, { color: colors.textSecondary }]}>{label}</Text>
-      <TextInput
-        style={[styles.input, { backgroundColor: colors.card, borderColor: colors.border, color: colors.textPrimary }]}
-        value={value}
-        onChangeText={onChangeText}
-        placeholder={placeholder}
-        placeholderTextColor={colors.textPlaceholder}
-        keyboardType={keyboardType ?? "default"}
-      />
+    <View style={styles.inputGroup}>
+      <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>{label}</Text>
+      <View style={[styles.inputWrapper, { backgroundColor: 'rgba(0,0,0,0.03)' }]}>
+        {icon && <MaterialCommunityIcons name={icon} size={20} color={colors.textPlaceholder} style={styles.inputIcon} />}
+        <TextInput
+          style={[styles.textInput, { color: colors.textPrimary }]}
+          value={value}
+          onChangeText={onChangeText}
+          placeholder={placeholder}
+          placeholderTextColor={colors.textPlaceholder}
+          keyboardType={keyboardType ?? "default"}
+          selectionColor={colors.primary}
+        />
+      </View>
     </View>
   );
 }
@@ -313,49 +386,86 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
+    paddingHorizontal: 24,
+    paddingVertical: 20,
+    backgroundColor: '#fff',
+    borderBottomLeftRadius: 32,
+    borderBottomRightRadius: 32,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    zIndex: 10,
   },
-  headerTitle: { fontSize: 18, fontWeight: "700" },
-  progress: { flexDirection: "row", gap: 6, marginHorizontal: 20, marginTop: 12 },
-  progressDot: { borderRadius: 2 },
-  stepLabel: { marginHorizontal: 20, marginTop: 6, marginBottom: 4, fontSize: 13 },
-  form: { padding: 20, gap: 16 },
-  fieldGroup: { gap: 8 },
-  label: { fontSize: 13, fontWeight: "600" },
-  input: {
-    borderWidth: 1.5,
-    borderRadius: 12,
-    padding: 14,
+  backBtn: { width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  headerInfo: { flex: 1, marginLeft: 8 },
+  headerSubtitle: { fontSize: 13, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 1 },
+  headerTitle: { fontSize: 20, fontWeight: "900", letterSpacing: -0.5 },
+  stepIndicator: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
+  stepText: { fontSize: 16, fontWeight: '900' },
+  progressContainer: { flexDirection: "row", height: 4, backgroundColor: 'rgba(0,0,0,0.05)' },
+  progressSegment: { height: 4 },
+  form: { padding: 20, gap: 20 },
+  stepCard: { padding: 24, gap: 20 },
+  fields: { gap: 18 },
+  inputGroup: { gap: 8 },
+  inputLabel: { fontSize: 13, fontWeight: "800", textTransform: 'uppercase', letterSpacing: 0.5 },
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 16,
+    paddingHorizontal: 16,
+  },
+  inputIcon: { marginRight: 12 },
+  textInput: {
+    flex: 1,
+    paddingVertical: 14,
     fontSize: 16,
+    fontWeight: '600',
   },
-  chipRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  group: { gap: 12 },
+  label: { fontSize: 13, fontWeight: "800", textTransform: 'uppercase', letterSpacing: 0.5 },
+  chipGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   chip: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-  },
-  chipText: { fontSize: 13, fontWeight: "600" },
-  marginBox: {
-    padding: 12,
-    borderRadius: 12,
-    alignItems: "center",
-  },
-  marginText: { fontSize: 15, fontWeight: "700" },
-  footer: {
-    padding: 20,
-    borderTopWidth: 1,
-  },
-  nextBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
     borderRadius: 14,
   },
-  nextBtnText: { color: "#fff", fontSize: 17, fontWeight: "700" },
+  chipText: { fontSize: 14, fontWeight: "800" },
+  row: { flexDirection: 'row', gap: 12 },
+  marginBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: 16,
+    gap: 10,
+  },
+  marginLabel: { fontSize: 14, fontWeight: '600' },
+  marginVal: { fontSize: 16, fontWeight: '900' },
+  infoCard: { flexDirection: 'row', padding: 16, borderRadius: 16, gap: 12, alignItems: 'center' },
+  infoText: { fontSize: 13, fontWeight: '600', flex: 1, lineHeight: 18 },
+  smartFeature: { padding: 18, borderRadius: 20, gap: 10 },
+  smartBadge: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  smartText: { fontSize: 11, fontWeight: '900', textTransform: 'uppercase' },
+  featureDesc: { fontSize: 13, fontWeight: '600', lineHeight: 18 },
+  footer: {
+    position: 'absolute',
+    bottom: 0,
+    width: '100%',
+    padding: 24,
+    zIndex: 20,
+  },
+  footerGradient: {
+    position: 'absolute',
+    top: -60,
+    left: 0,
+    right: 0,
+    height: 60,
+  },
+  actionsRow: { flexDirection: 'row', gap: 12 },
+  prevBtn: { width: 56, height: 56, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
+  mainBtn: { borderRadius: 18, elevation: 8, shadowColor: '#000', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.2, shadowRadius: 15 },
+  btnContent: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: 18, gap: 12 },
+  btnText: { color: '#fff', fontSize: 18, fontWeight: '900', letterSpacing: -0.3 },
 });

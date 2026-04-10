@@ -3,5 +3,7 @@
 - `[x]` Update `components/owner/StoreHeader.tsx` (Owner Header)
 - `[x]` Update `app/(customer)/stores/[storeId]/index.tsx` (Store Detail)
 - `[x]` Update `components/customer/StoreCard.tsx` (Store Card Placeholder)
-- `[ ]` Update `app/(customer)/profile/index.tsx` (Customer Profile)
+- `[x]` Update `app/(customer)/profile/index.tsx` (Customer Profile)
+- `[x]` Create Supabase Database Schema Setup Guide
+- `[x]` Verify Supabase Client configuration
 - `[/]` Verify changes in browser

@@ -1,80 +1,44 @@
-import { Feather } from "@expo/vector-icons";
+import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
-import React, { useEffect, useMemo, useState } from "react";
+import { useRouter } from "expo-router";
+import React, { useMemo, useState } from "react";
 import {
-  FlatList,
   Platform,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
+  StatusBar,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
+import { LinearGradient } from "expo-linear-gradient";
 
 import { ForecastCard } from "@/components/owner/ForecastCard";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { useData } from "@/context/DataContext";
 import { useColors } from "@/hooks/useColors";
-import { Forecast } from "@/types/forecast.types";
+import { useAuthStore } from "@/store/authStore";
 import { PRODUCT_CATEGORIES } from "@/constants/categories";
-
-const CONFIDENCE_LEVELS: Array<"Low" | "Medium" | "High"> = ["Low", "Medium", "High"];
-
-function generateMockForecast(product: any, storeId: string): Forecast {
-  const avgDailySales = 2 + Math.random() * 8;
-  const confidence = product.currentStock < product.reorderLevel
-    ? "High"
-    : product.currentStock < product.reorderLevel * 1.5
-    ? "Medium"
-    : "Low";
-
-  const forecast7d = +(avgDailySales * 7 * (0.9 + Math.random() * 0.3)).toFixed(1);
-  const forecast14d = +(avgDailySales * 14 * (0.9 + Math.random() * 0.3)).toFixed(1);
-  const forecast30d = +(avgDailySales * 30 * (0.9 + Math.random() * 0.3)).toFixed(1);
-  const restockNow = product.currentStock < forecast7d;
-
-  const festivals = ["Diwali", "Holi", "Navratri", "Eid"];
-  const hasFestival = Math.random() > 0.6;
-  const festival = festivals[Math.floor(Math.random() * festivals.length)];
-
-  return {
-    id: `forecast_${product.id}_${Date.now()}`,
-    productId: product.id,
-    storeId,
-    productName: product.name,
-    productCategory: product.category,
-    currentStock: product.currentStock,
-    reorderLevel: product.reorderLevel,
-    unit: product.unit,
-    supplierName: product.supplierName,
-    supplierPhone: product.supplierPhone,
-    forecast7d,
-    forecast14d,
-    forecast30d,
-    restockNow,
-    recommendedQty: product.reorderQty,
-    bestReorderDay: restockNow ? "Today" : "Monday",
-    seasonalNote: hasFestival
-      ? `Expect ${15 + Math.floor(Math.random() * 30)}% surge due to upcoming ${festival}`
-      : undefined,
-    confidence,
-    reasoning: restockNow
-      ? `Current stock of ${product.currentStock} ${product.unit} will not last the next 7 days based on recent sales trends. Order ${product.reorderQty} ${product.unit} immediately.`
-      : `Sales are steady. Consider restocking on Monday when demand typically rises to avoid weekend shortages.`,
-    generatedAt: new Date().toISOString(),
-  };
-}
+import { analyzeProductDemand } from "@/utils/aiEngine";
 
 export default function ForecastScreen() {
   const colors = useColors();
+  const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { activeStore, getProductsForStore, forecasts, setForecasts } = useData();
+  const language = useAuthStore((s) => s.language);
+  const { activeStore, getProductsForStore, getBillsForStore, forecasts, setForecasts } = useData();
 
   const products = useMemo(
     () => getProductsForStore(activeStore?.id ?? ""),
     [activeStore?.id, getProductsForStore]
+  );
+
+  const bills = useMemo(
+    () => getBillsForStore(activeStore?.id ?? ""),
+    [activeStore?.id, getBillsForStore]
   );
 
   const storeForecast = useMemo(
@@ -85,18 +49,20 @@ export default function ForecastScreen() {
   const [loading, setLoading] = useState(false);
   const [filterCategory, setFilterCategory] = useState("all");
   const [showRestockOnly, setShowRestockOnly] = useState(false);
-  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
 
   const handleAnalyzeAll = async () => {
     setLoading(true);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    await new Promise((r) => setTimeout(r, 2000));
+    
+    // Simulate complex AI processing time
+    await new Promise((r) => setTimeout(r, 1500));
+    
     const newForecasts = products.map((p) =>
-      generateMockForecast(p, activeStore?.id ?? "")
+      analyzeProductDemand(p, bills, language)
     );
+    
     const otherStoreForecasts = forecasts.filter((f) => f.storeId !== activeStore?.id);
     setForecasts([...otherStoreForecasts, ...newForecasts]);
-    setLastUpdated(new Date().toLocaleTimeString("en-IN"));
     setLoading(false);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
   };
@@ -115,110 +81,140 @@ export default function ForecastScreen() {
   const urgentCount = storeForecast.filter((f) => f.restockNow).length;
 
   return (
-    <View
-      style={[
-        styles.container,
-        { backgroundColor: colors.background, paddingTop: insets.top + (Platform.OS === "web" ? 67 : 0) },
-      ]}
-    >
-      <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
-        <View>
-          <Text style={[styles.title, { color: colors.textPrimary }]}>AI Demand Forecast</Text>
-          {lastUpdated && (
-            <Text style={[styles.updated, { color: colors.textSecondary }]}>
-              Last updated: {lastUpdated}
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar barStyle="dark-content" />
+      <View style={[styles.header, { paddingTop: insets.top + (Platform.OS === "web" ? 20 : 10) }]}>
+        <View style={styles.headerTop}>
+          <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+             <Feather name="chevron-left" size={24} color={colors.textPrimary} />
+          </TouchableOpacity>
+          <View style={styles.headerInfo}>
+            <Text style={[styles.subtitle, { color: colors.primary }]}>
+               {language === 'hi' ? "ऑर्गेनिक इंटेलिजेंस" : "Organic Intelligence"}
             </Text>
-          )}
+            <Text style={[styles.title, { color: colors.textPrimary }]}>
+               {language === 'hi' ? "मांग का पूर्वानुमान" : "Demand Forecast"}
+            </Text>
+          </View>
         </View>
+
         <TouchableOpacity
-          style={[styles.analyzeBtn, { backgroundColor: loading ? colors.muted : colors.primary }]}
+          style={styles.analyzeBtnContainer}
           onPress={handleAnalyzeAll}
           disabled={loading}
+          activeOpacity={0.8}
         >
-          {loading ? (
-            <LoadingSpinner size="small" color="#fff" />
-          ) : (
-            <>
-              <Feather name="cpu" size={16} color="#fff" />
-              <Text style={styles.analyzeBtnText}>Analyze All</Text>
-            </>
-          )}
+          <LinearGradient
+             colors={loading ? [colors.gray300, colors.gray300] : [colors.primary, '#4F46E5']}
+             start={{x: 0, y: 0}}
+             end={{x: 1, y: 0}}
+             style={styles.btnGradient}
+          >
+            {loading ? (
+              <LoadingSpinner size="small" color="#fff" />
+            ) : (
+              <>
+                <MaterialCommunityIcons name="auto-fix" size={20} color="#fff" />
+                <Text style={styles.analyzeBtnText}>
+                  {language === 'hi' ? "डेटा का विश्लेषण करें" : "Refresh Intelligence"}
+                </Text>
+              </>
+            )}
+          </LinearGradient>
         </TouchableOpacity>
       </View>
 
-      {urgentCount > 0 && (
-        <TouchableOpacity
-          style={[styles.urgentBanner, { backgroundColor: colors.dangerLight }]}
-          onPress={() => setShowRestockOnly(!showRestockOnly)}
-        >
-          <Feather name="alert-triangle" size={16} color={colors.danger} />
-          <Text style={[styles.urgentText, { color: colors.danger }]}>
-            {urgentCount} product{urgentCount !== 1 ? "s" : ""} need immediate restocking
-          </Text>
-          <Text style={[styles.urgentAction, { color: colors.danger }]}>
-            {showRestockOnly ? "Show All" : "View"}
-          </Text>
-        </TouchableOpacity>
-      )}
+      <ScrollView 
+        stickyHeaderIndices={[1]} 
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: insets.bottom + 100 }}
+      >
+        {urgentCount > 0 && (
+          <Animated.View entering={FadeInUp} style={styles.urgentWrapper}>
+             <TouchableOpacity
+               onPress={() => setShowRestockOnly(!showRestockOnly)}
+               activeOpacity={0.9}
+             >
+               <LinearGradient
+                 colors={[colors.danger, colors.accent]}
+                 start={{ x: 0, y: 0 }}
+                 end={{ x: 1, y: 0 }}
+                 style={styles.urgentBanner}
+               >
+                 <MaterialCommunityIcons name="alert-decagram" size={24} color="#fff" />
+                 <View style={{flex: 1}}>
+                    <Text style={styles.urgentText}>Critical Shortage Alert</Text>
+                    <Text style={styles.urgentSub}>{urgentCount} items need immediate refill</Text>
+                 </View>
+                 <View style={styles.urgentActionBox}>
+                    <Text style={styles.urgentActionText}>{showRestockOnly ? "Show All" : "Fix Now"}</Text>
+                 </View>
+               </LinearGradient>
+             </TouchableOpacity>
+          </Animated.View>
+        )}
 
-      <View style={styles.filterRow}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScroll}>
-          <TouchableOpacity
-            style={[
-              styles.filterChip,
-              { backgroundColor: filterCategory === "all" ? colors.primary : colors.card, borderColor: filterCategory === "all" ? colors.primary : colors.border },
-            ]}
-            onPress={() => setFilterCategory("all")}
-          >
-            <Text style={[styles.filterText, { color: filterCategory === "all" ? "#fff" : colors.textSecondary }]}>
-              All
-            </Text>
-          </TouchableOpacity>
-          {PRODUCT_CATEGORIES.map((cat) => (
+        <View style={[styles.filterRow, { backgroundColor: colors.background }]}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScroll}>
             <TouchableOpacity
-              key={cat.id}
               style={[
                 styles.filterChip,
-                { backgroundColor: filterCategory === cat.id ? colors.primary : colors.card, borderColor: filterCategory === cat.id ? colors.primary : colors.border },
+                filterCategory === "all" && { backgroundColor: colors.primary, borderColor: colors.primary },
               ]}
-              onPress={() => setFilterCategory(cat.id)}
+              onPress={() => setFilterCategory("all")}
             >
-              <Text style={[styles.filterText, { color: filterCategory === cat.id ? "#fff" : colors.textSecondary }]}>
-                {cat.label}
-              </Text>
+              <Text style={[styles.filterText, { color: filterCategory === "all" ? "#fff" : colors.textSecondary }]}>All</Text>
             </TouchableOpacity>
-          ))}
-        </ScrollView>
-      </View>
-
-      {loading ? (
-        <View style={styles.loadingContainer}>
-          <LoadingSpinner />
-          <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
-            AI is analyzing sales patterns...
-          </Text>
+            {PRODUCT_CATEGORIES.map((cat) => (
+              <TouchableOpacity
+                key={cat.id}
+                style={[
+                  styles.filterChip,
+                  filterCategory === cat.id && { backgroundColor: colors.primary, borderColor: colors.primary },
+                ]}
+                onPress={() => setFilterCategory(cat.id)}
+              >
+                <Text style={[styles.filterText, { color: filterCategory === cat.id ? "#fff" : colors.textSecondary }]}>
+                  {cat.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
         </View>
-      ) : filtered.length === 0 ? (
-        <EmptyState
-          icon="cpu"
-          title="No forecast data yet"
-          subtitle={
-            storeForecast.length === 0
-              ? "Tap 'Analyze All' to generate AI-powered forecasts for all products"
-              : "No products match the current filters"
-          }
-          actionLabel={storeForecast.length === 0 ? "Analyze All Products" : undefined}
-          onAction={storeForecast.length === 0 ? handleAnalyzeAll : undefined}
-        />
-      ) : (
-        <FlatList
-          data={filtered}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => <ForecastCard forecast={item} />}
-          contentContainerStyle={[styles.list, { paddingBottom: insets.bottom + 100 }]}
-          showsVerticalScrollIndicator={false}
-        />
-      )}
+
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <LoadingSpinner />
+            <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
+              Organic Intelligence is crunching sales data...
+            </Text>
+          </View>
+        ) : filtered.length === 0 ? (
+          <EmptyState
+            icon="cpu"
+            title="No insights yet"
+            subtitle={
+              storeForecast.length === 0
+                ? "Generate AI-powered demand forecasts to optimize your stock levels."
+                : "No items match your filter selection."
+            }
+            actionLabel={storeForecast.length === 0 ? "Start AI Analysis" : undefined}
+            onAction={storeForecast.length === 0 ? handleAnalyzeAll : undefined}
+          />
+        ) : (
+          <View style={styles.list}>
+            {filtered.map((item, idx) => (
+              <Animated.View key={item.id} entering={FadeInDown.delay(idx * 50)}>
+                 <ForecastCard forecast={item} />
+              </Animated.View>
+            ))}
+          </View>
+        )}
+      </ScrollView>
+
+      {/* Background Orbs */}
+      <View style={[styles.orb, { backgroundColor: colors.primary + '05', top: 100, right: -50 }]} />
+      <View style={[styles.orb, { backgroundColor: colors.success + '05', bottom: 100, left: -50 }]} />
     </View>
   );
 }
@@ -226,47 +222,58 @@ export default function ForecastScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
     paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingBottom: 20,
+    gap: 16,
     borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0,0,0,0.03)',
   },
-  title: { fontSize: 22, fontWeight: "800" },
-  updated: { fontSize: 12, marginTop: 2 },
-  analyzeBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 12,
-    minWidth: 90,
-    justifyContent: "center",
+  headerTop: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  backBtn: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.02)' },
+  headerInfo: { flex: 1 },
+  title: { fontSize: 24, fontWeight: "900", letterSpacing: -0.5 },
+  subtitle: { fontSize: 13, fontWeight: "800", textTransform: 'uppercase', letterSpacing: 0.5 },
+  analyzeBtnContainer: {
+    height: 52,
+    borderRadius: 16,
+    overflow: 'hidden',
+    elevation: 4,
+    shadowColor: '#6366F1',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
   },
-  analyzeBtnText: { color: "#fff", fontWeight: "700", fontSize: 14 },
+  btnGradient: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingHorizontal: 20 },
+  analyzeBtnText: { color: "#fff", fontWeight: "900", fontSize: 15, letterSpacing: 0.5 },
+  urgentWrapper: { padding: 16 },
   urgentBanner: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
-    margin: 16,
-    marginBottom: 0,
-    padding: 14,
-    borderRadius: 12,
+    gap: 16,
+    padding: 18,
+    borderRadius: 24,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.2,
+    shadowRadius: 15,
   },
-  urgentText: { flex: 1, fontSize: 14, fontWeight: "600" },
-  urgentAction: { fontWeight: "700", fontSize: 14 },
-  filterRow: { paddingVertical: 12 },
-  filterScroll: { paddingHorizontal: 16, gap: 8 },
+  urgentText: { fontSize: 16, fontWeight: "900", color: "#fff" },
+  urgentSub: { fontSize: 12, fontWeight: '700', color: 'rgba(255,255,255,0.8)' },
+  urgentActionBox: { backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10 },
+  urgentActionText: { color: '#fff', fontSize: 11, fontWeight: '900' },
+  filterRow: { paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: 'rgba(0,0,0,0.03)' },
+  filterScroll: { paddingHorizontal: 16, gap: 10 },
   filterChip: {
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderRadius: 20,
-    borderWidth: 1,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: 'rgba(0,0,0,0.05)',
   },
-  filterText: { fontSize: 13, fontWeight: "600" },
-  loadingContainer: { flex: 1, alignItems: "center", justifyContent: "center", gap: 12 },
-  loadingText: { fontSize: 15, textAlign: "center" },
-  list: { paddingTop: 12 },
+  filterText: { fontSize: 13, fontWeight: "800" },
+  loadingContainer: { minHeight: 400, alignItems: "center", justifyContent: "center", gap: 16, padding: 40 },
+  loadingText: { fontSize: 15, textAlign: "center", fontWeight: '700', lineHeight: 22 },
+  list: { paddingTop: 8 },
+  orb: { position: 'absolute', width: 250, height: 250, borderRadius: 125, zIndex: -1 },
 });

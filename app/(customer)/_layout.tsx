@@ -1,6 +1,6 @@
 import { Feather } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
-import { Tabs, useRouter } from "expo-router";
+import { Tabs, useRouter, Redirect } from "expo-router";
 import React, { useEffect } from "react";
 import { Platform, StyleSheet, View } from "react-native";
 
@@ -10,7 +10,7 @@ import { useColors } from "@/hooks/useColors";
 
 export default function CustomerLayout() {
   const colors = useColors();
-  const role = useAuthStore((s) => s.role);
+  const { role, token } = useAuthStore();
   const router = useRouter();
   const cartCount = useCartStore((s) => s.getItemCount());
   const isIOS = Platform.OS === "ios";
@@ -21,6 +21,10 @@ export default function CustomerLayout() {
       router.replace("/(owner)/dashboard");
     }
   }, [role]);
+
+  if (!token) {
+    return <Redirect href="/(auth)/role-select" />;
+  }
 
   return (
     <Tabs

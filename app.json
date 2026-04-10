@@ -2,7 +2,7 @@
   "expo": {
     "name": "KiranaAI",
     "slug": "kirana-ai",
-    "version": "1.0.0",
+    "version": "1.2.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "kirana-ai",
@@ -14,9 +14,25 @@
       "backgroundColor": "#FF6B00"
     },
     "ios": {
-      "supportsTablet": false
+      "supportsTablet": false,
+      "bundleIdentifier": "com.kiranaai.app"
     },
-    "android": {},
+    "android": {
+      "package": "com.kiranaai.app",
+      "versionCode": 3,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/icon.png",
+        "backgroundColor": "#FF6B00"
+      },
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "CAMERA",
+        "VIBRATE",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ]
+    },
     "web": {
       "favicon": "./assets/images/icon.png"
     },
@@ -24,15 +40,27 @@
       [
         "expo-router",
         {
-          "origin": "https://replit.com/"
+          "origin": "https://kiranaai.app"
         }
       ],
       "expo-font",
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "KiranaAI needs your location to find nearby stores."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "5193c83f-37ed-4729-9910-506847c52a9c"
+      }
+    },
+    "owner": "kartikgauttam"
   }
 }

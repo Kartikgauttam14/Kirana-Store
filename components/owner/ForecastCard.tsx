@@ -1,4 +1,4 @@
-import { Feather } from "@expo/vector-icons";
+import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import {
   Alert,
@@ -8,10 +8,12 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 
 import { Badge } from "@/components/ui/Badge";
 import { useColors } from "@/hooks/useColors";
 import { Forecast } from "@/types/forecast.types";
+import { GlassCard } from "@/components/ui/GlassCard";
 
 interface ForecastCardProps {
   forecast: Forecast;
@@ -55,179 +57,219 @@ export function ForecastCard({ forecast }: ForecastCardProps) {
   };
 
   return (
-    <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+    <GlassCard intensity={15} style={styles.card} borderRadius={28}>
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <Text style={[styles.name, { color: colors.textPrimary }]}>{forecast.productName}</Text>
-          <Badge label={forecast.productCategory} variant="muted" size="sm" />
+          <View style={styles.badgeRow}>
+             <Badge label={forecast.productCategory} variant="muted" size="sm" />
+             <View style={[styles.aiBadge, { backgroundColor: colors.primary + '15' }]}>
+                <MaterialCommunityIcons name="brain" size={10} color={colors.primary} />
+                <Text style={[styles.aiBadgeText, { color: colors.primary }]}>AI PREDICTED</Text>
+             </View>
+          </View>
         </View>
         {forecast.restockNow && (
-          <View style={[styles.urgentBadge, { backgroundColor: colors.dangerLight }]}>
-            <Feather name="alert-triangle" size={12} color={colors.danger} />
-            <Text style={[styles.urgentText, { color: colors.danger }]}>Restock Now</Text>
-          </View>
+          <LinearGradient
+            colors={[colors.danger, colors.accent]}
+            style={styles.urgentBadge}
+          >
+            <Feather name="zap" size={10} color="#fff" />
+            <Text style={styles.urgentText}>RESTOCK</Text>
+          </LinearGradient>
         )}
       </View>
 
       <View style={styles.stockSection}>
         <View style={styles.stockRow}>
           <Text style={[styles.stockLabel, { color: colors.textSecondary }]}>
-            Current: {forecast.currentStock} {forecast.unit}
+            Stock: <Text style={{fontWeight: '800', color: colors.textPrimary}}>{forecast.currentStock} {forecast.unit}</Text>
           </Text>
           <Text style={[styles.stockLabel, { color: colors.textSecondary }]}>
-            Reorder at: {forecast.reorderLevel}
+            Goal: {forecast.reorderLevel * 2}
           </Text>
         </View>
-        <View style={[styles.progressBg, { backgroundColor: colors.muted }]}>
-          <View
-            style={[
-              styles.progressFill,
-              {
-                width: `${stockPercent}%` as any,
-                backgroundColor:
-                  stockPercent <= 25
-                    ? colors.danger
-                    : stockPercent <= 50
-                    ? colors.warning
-                    : colors.success,
-              },
-            ]}
+        <View style={[styles.progressBg, { backgroundColor: 'rgba(0,0,0,0.05)' }]}>
+          <LinearGradient
+            colors={
+              stockPercent <= 25
+                ? [colors.danger, colors.danger + 'CC']
+                : stockPercent <= 50
+                ? [colors.warning, colors.warning + 'CC']
+                : [colors.primary, colors.success]
+            }
+            start={{x: 0, y: 0}}
+            end={{x: 1, y: 0}}
+            style={[styles.progressFill, { width: `${stockPercent}%` as any }]}
           />
         </View>
       </View>
 
-      <View style={styles.tabBar}>
-        {(["7d", "14d", "30d"] as const).map((t) => (
-          <TouchableOpacity
-            key={t}
-            style={[
-              styles.tab,
-              tab === t && { backgroundColor: colors.primary },
-            ]}
-            onPress={() => setTab(t)}
-          >
-            <Text
-              style={[
-                styles.tabText,
-                { color: tab === t ? colors.primaryForeground : colors.mutedForeground },
-              ]}
-            >
-              {t}
+      <View style={styles.predictionSection}>
+         <View style={styles.tabBar}>
+            {(["7d", "14d", "30d"] as const).map((t) => (
+              <TouchableOpacity
+                key={t}
+                style={[
+                  styles.tab,
+                  tab === t && { backgroundColor: '#fff', elevation: 4 },
+                ]}
+                onPress={() => setTab(t)}
+              >
+                <Text
+                  style={[
+                    styles.tabText,
+                    { color: tab === t ? colors.primary : colors.textPlaceholder },
+                  ]}
+                >
+                  {t.toUpperCase()}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          <View style={[styles.forecastBox, { backgroundColor: colors.primary + '08' }]}>
+            <View style={styles.valRow}>
+               <Text style={[styles.forecastValue, { color: colors.primary }]}>
+                 {forecastValue.toFixed(1)}
+               </Text>
+               <Text style={[styles.unitText, { color: colors.textPlaceholder }]}>{forecast.unit}</Text>
+            </View>
+            <Text style={[styles.forecastLabel, { color: colors.textSecondary }]}>
+              Estimated Demand
             </Text>
-          </TouchableOpacity>
-        ))}
+            <View style={styles.confidenceRow}>
+               <View style={[styles.confDot, { backgroundColor: colors[confidenceVariant] }]} />
+               <Text style={[styles.confText, { color: colors[confidenceVariant] }]}>{forecast.confidence} Confidence</Text>
+            </View>
+          </View>
       </View>
 
-      <View style={[styles.forecastBox, { backgroundColor: colors.primaryLight }]}>
-        <Text style={[styles.forecastValue, { color: colors.primary }]}>
-          {forecastValue.toFixed(1)} {forecast.unit}
-        </Text>
-        <Text style={[styles.forecastLabel, { color: colors.textSecondary }]}>
-          predicted demand
-        </Text>
-        <Badge label={forecast.confidence} variant={confidenceVariant} size="sm" />
+      <View style={[styles.insightBox, { backgroundColor: colors.secondary + '05' }]}>
+         <MaterialCommunityIcons name="lightbulb-outline" size={18} color={colors.secondary} />
+         <View style={{flex: 1}}>
+           {forecast.seasonalNote && (
+              <Text style={[styles.seasonalNote, { color: colors.secondary }]}>
+                {forecast.seasonalNote}
+              </Text>
+            )}
+            <Text style={[styles.reasoning, { color: colors.textSecondary }]}>
+              {forecast.reasoning}
+            </Text>
+         </View>
       </View>
-
-      {forecast.seasonalNote && (
-        <Text style={[styles.seasonalNote, { color: colors.secondary }]}>
-          {forecast.seasonalNote}
-        </Text>
-      )}
-
-      <Text style={[styles.reasoning, { color: colors.textSecondary }]}>
-        {forecast.reasoning}
-      </Text>
 
       <View style={styles.footer}>
-        <Text style={[styles.reorderDay, { color: colors.textSecondary }]}>
-          Best reorder: <Text style={{ fontWeight: "600", color: colors.textPrimary }}>{forecast.bestReorderDay}</Text>
-        </Text>
+        <View style={styles.reorderInfo}>
+           <Text style={[styles.reorderLabel, { color: colors.textPlaceholder }]}>Recommended Next Order</Text>
+           <Text style={[styles.reorderDay, { color: colors.textPrimary }]}>
+             {forecast.recommendedQty} {forecast.unit} by <Text style={{ color: colors.primary }}>{forecast.bestReorderDay}</Text>
+           </Text>
+        </View>
+        
         <TouchableOpacity
-          style={[styles.waBtn, { backgroundColor: "#25D366" }]}
+          style={[styles.waBtn, { backgroundColor: '#25D366' }]}
           onPress={handleWhatsApp}
+          activeOpacity={0.8}
         >
-          <Feather name="message-circle" size={14} color="#fff" />
-          <Text style={styles.waBtnText}>Order via WhatsApp</Text>
+          <MaterialCommunityIcons name="whatsapp" size={20} color="#fff" />
         </TouchableOpacity>
       </View>
-    </View>
+    </GlassCard>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 16,
-    borderWidth: 1,
     marginHorizontal: 16,
-    marginBottom: 14,
-    padding: 16,
-    gap: 12,
+    marginBottom: 16,
+    padding: 24,
+    gap: 20,
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
   },
-  headerLeft: { flex: 1, gap: 4 },
-  name: { fontSize: 16, fontWeight: "700" },
+  headerLeft: { flex: 1, gap: 6 },
+  name: { fontSize: 18, fontWeight: "900", letterSpacing: -0.5 },
+  badgeRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  aiBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 },
+  aiBadgeText: { fontSize: 9, fontWeight: '900' },
   urgentBadge: {
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 12,
   },
-  urgentText: { fontSize: 11, fontWeight: "700" },
-  stockSection: { gap: 6 },
+  urgentText: { fontSize: 10, fontWeight: "900", color: "#fff" },
+  stockSection: { gap: 8 },
   stockRow: { flexDirection: "row", justifyContent: "space-between" },
-  stockLabel: { fontSize: 12 },
+  stockLabel: { fontSize: 12, fontWeight: '600' },
   progressBg: {
-    height: 6,
-    borderRadius: 3,
+    height: 8,
+    borderRadius: 4,
     overflow: "hidden",
   },
   progressFill: {
     height: "100%",
-    borderRadius: 3,
+    borderRadius: 4,
   },
+  predictionSection: { gap: 12 },
   tabBar: {
     flexDirection: "row",
-    backgroundColor: "#F0F0F0",
-    borderRadius: 8,
-    padding: 3,
-    gap: 2,
+    backgroundColor: 'rgba(0,0,0,0.04)',
+    borderRadius: 12,
+    padding: 4,
+    gap: 4,
   },
   tab: {
     flex: 1,
-    paddingVertical: 6,
-    borderRadius: 6,
+    paddingVertical: 8,
+    borderRadius: 10,
     alignItems: "center",
   },
-  tabText: { fontSize: 13, fontWeight: "600" },
+  tabText: { fontSize: 11, fontWeight: "900", letterSpacing: 0.5 },
   forecastBox: {
     alignItems: "center",
-    paddingVertical: 14,
-    borderRadius: 12,
-    gap: 4,
+    paddingVertical: 16,
+    borderRadius: 20,
+    gap: 2,
   },
-  forecastValue: { fontSize: 28, fontWeight: "800" },
-  forecastLabel: { fontSize: 13 },
-  seasonalNote: { fontSize: 13, fontStyle: "italic", lineHeight: 18 },
-  reasoning: { fontSize: 13, lineHeight: 18 },
+  valRow: { flexDirection: 'row', alignItems: 'baseline', gap: 4 },
+  forecastValue: { fontSize: 32, fontWeight: "900", letterSpacing: -1 },
+  unitText: { fontSize: 14, fontWeight: '700' },
+  forecastLabel: { fontSize: 13, fontWeight: '600' },
+  confidenceRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 },
+  confDot: { width: 6, height: 6, borderRadius: 3 },
+  confText: { fontSize: 11, fontWeight: '800', textTransform: 'uppercase' },
+  insightBox: { flexDirection: 'row', padding: 16, borderRadius: 20, gap: 12 },
+  seasonalNote: { fontSize: 13, fontWeight: '800', marginBottom: 2 },
+  reasoning: { fontSize: 13, fontWeight: '600', lineHeight: 18 },
   footer: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    marginTop: 4,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0,0,0,0.03)',
   },
-  reorderDay: { fontSize: 13 },
+  reorderInfo: { flex: 1, gap: 2 },
+  reorderLabel: { fontSize: 11, fontWeight: '700', textTransform: 'uppercase' },
+  reorderDay: { fontSize: 14, fontWeight: "800" },
   waBtn: {
-    flexDirection: "row",
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     alignItems: "center",
-    gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
+    justifyContent: "center",
+    elevation: 4,
+    shadowColor: '#25D366',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
   },
-  waBtnText: { color: "#fff", fontWeight: "600", fontSize: 13 },
 });

@@ -1,4 +1,4 @@
-import { Feather } from "@expo/vector-icons";
+import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import React, { useMemo, useState } from "react";
 import {
   Platform,
@@ -7,12 +7,17 @@ import {
   Text,
   TouchableOpacity,
   View,
+  StatusBar,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { LinearGradient } from "expo-linear-gradient";
+import Animated, { FadeInDown, ZoomIn } from "react-native-reanimated";
 
 import { useData } from "@/context/DataContext";
 import { useColors } from "@/hooks/useColors";
 import { formatCurrency } from "@/utils/formatCurrency";
+import { GlassCard } from "@/components/ui/GlassCard";
+import { AnimatedCounter } from "@/components/ui/AnimatedCounter";
 
 type Period = "7d" | "30d" | "all";
 
@@ -70,24 +75,30 @@ export default function AnalyticsScreen() {
   }, [filteredBills]);
 
   return (
-    <View
-      style={[
-        styles.container,
-        { backgroundColor: colors.background, paddingTop: insets.top + (Platform.OS === "web" ? 67 : 0) },
-      ]}
-    >
-      <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
-        <Text style={[styles.title, { color: colors.textPrimary }]}>Analytics</Text>
-        <View style={[styles.periodToggle, { backgroundColor: colors.muted }]}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar barStyle="dark-content" />
+      <View style={[styles.header, { paddingTop: insets.top + (Platform.OS === "web" ? 30 : 10) }]}>
+         <View style={styles.headerInfo}>
+            <Text style={[styles.title, { color: colors.textPrimary }]}>Business Insights</Text>
+            <View style={styles.subtitleRow}>
+               <MaterialCommunityIcons name="finance" size={16} color={colors.primary} />
+               <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Performance Overview</Text>
+            </View>
+         </View>
+        <View style={[styles.periodToggle, { backgroundColor: colors.gray100 }]}>
           {(["7d", "30d", "all"] as Period[]).map((p) => (
             <TouchableOpacity
               key={p}
-              style={[styles.periodBtn, period === p && { backgroundColor: colors.primary }]}
+              style={[
+                styles.periodBtn, 
+                period === p && { backgroundColor: '#fff', elevation: 2, shadowColor: '#000', shadowOffset: {width: 0, height: 2}, shadowOpacity: 0.1, shadowRadius: 4 }
+              ]}
               onPress={() => setPeriod(p)}
+              activeOpacity={0.8}
             >
-              <Text style={[styles.periodText, { color: period === p ? "#fff" : colors.mutedForeground }]}>
-                {p === "all" ? "All" : p}
-              </Text>
+              <Animated.Text style={[styles.periodText, { color: period === p ? colors.primary : colors.textSecondary }]}>
+                {p === "all" ? "Live" : p}
+              </Animated.Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -98,172 +109,227 @@ export default function AnalyticsScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.statsGrid}>
-          <StatCard label="Total Revenue" value={formatCurrency(totalRevenue)} icon="dollar-sign" color={colors.success} bg={colors.successLight} colors={colors} />
-          <StatCard label="Total Bills" value={String(filteredBills.length)} icon="file-text" color={colors.primary} bg={colors.primaryLight} colors={colors} />
-          <StatCard label="Avg Bill Value" value={formatCurrency(avgBillValue)} icon="trending-up" color={colors.secondary} bg="#E8F0FE" colors={colors} />
-          <StatCard label="GST Collected" value={formatCurrency(totalGST)} icon="percent" color="#F57C00" bg="#FFF8E1" colors={colors} />
+          <StatCard label="Total Revenue" value={totalRevenue} prefix="₹" icon="currency-inr" color="#10B981" colors={colors} delay={0} />
+          <StatCard label="Bills Generated" value={filteredBills.length} icon="receipt" color="#6366F1" colors={colors} delay={50} />
+          <StatCard label="Avg Order Value" value={avgBillValue} prefix="₹" icon="chart-line-variant" color="#F59E0B" colors={colors} delay={100} />
+          <StatCard label="GST Payout" value={totalGST} prefix="₹" icon="percent" color="#EC4899" colors={colors} delay={150} />
         </View>
 
-        <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Sales Trend</Text>
-          <View style={styles.chartArea}>
-            <View style={styles.bars}>
-              {dailySales.map((day, i) => (
-                <View key={i} style={styles.barCol}>
-                  <View style={styles.barWrapper}>
-                    <View
-                      style={[
-                        styles.bar,
-                        {
-                          height: Math.max(4, (day.total / maxSales) * 130),
-                          backgroundColor: i === dailySales.length - 1 ? colors.primary : colors.gray300,
-                        },
-                      ]}
-                    />
-                  </View>
-                  <Text style={[styles.barDate, { color: colors.textSecondary }]} numberOfLines={1}>
-                    {day.date}
-                  </Text>
-                </View>
-              ))}
+        <Animated.View entering={FadeInDown.delay(200)}>
+          <GlassCard style={styles.section} intensity={15} borderRadius={32}>
+            <View style={styles.sectionHeader}>
+               <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Revenue Trend</Text>
+               <TouchableOpacity style={styles.infoBtn}>
+                  <MaterialCommunityIcons name="information-outline" size={20} color={colors.textPlaceholder} />
+               </TouchableOpacity>
             </View>
-          </View>
-        </View>
+            <View style={styles.chartArea}>
+              <View style={styles.bars}>
+                {dailySales.map((day, i) => (
+                  <View key={i} style={styles.barCol}>
+                    <View style={styles.barWrapper}>
+                      <LinearGradient
+                        colors={i === dailySales.length - 1 ? [colors.primary, colors.success] : [colors.primary + '30', colors.primary + '10']}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 0, y: 1 }}
+                        style={[
+                          styles.bar,
+                          { height: Math.max(12, (day.total / maxSales) * 120) },
+                        ]}
+                      />
+                    </View>
+                    <Text style={[styles.barDate, { color: colors.textSecondary }]} numberOfLines={1}>
+                      {day.date.split(' ')[0]}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          </GlassCard>
+        </Animated.View>
 
         {topProducts.length > 0 && (
-          <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
-            <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Top Selling Products</Text>
-            {topProducts.map((p, i) => (
-              <View key={i} style={styles.topProductRow}>
-                <View style={[styles.rankBadge, { backgroundColor: i === 0 ? colors.warning : colors.muted }]}>
-                  <Text style={[styles.rankText, { color: i === 0 ? "#fff" : colors.mutedForeground }]}>
-                    #{i + 1}
-                  </Text>
+          <Animated.View entering={FadeInDown.delay(250)}>
+            <GlassCard style={styles.section} intensity={10} borderRadius={32}>
+              <Text style={[styles.sectionTitle, { color: colors.textPrimary, marginBottom: 8 }]}>Top Sellers</Text>
+              {topProducts.map((p, i) => (
+                <View key={i} style={[styles.topProductRow, i !== topProducts.length - 1 && { borderBottomColor: colors.border + '40', borderBottomWidth: 1 }]}>
+                  <View style={[styles.rankBadge, { backgroundColor: i === 0 ? colors.primary + '15' : colors.gray100 }]}>
+                    <Text style={[styles.rankText, { color: i === 0 ? colors.primary : colors.textSecondary }]}>
+                      #{i + 1}
+                    </Text>
+                  </View>
+                  <View style={styles.topProductInfo}>
+                    <Text style={[styles.topProductName, { color: colors.textPrimary }]} numberOfLines={1}>
+                      {p.name}
+                    </Text>
+                    <Text style={[styles.topProductQty, { color: colors.textSecondary }]}>
+                      {p.qty.toFixed(0)} units sold
+                    </Text>
+                  </View>
+                  <View style={styles.topProductRight}>
+                    <Text style={[styles.topProductRevenue, { color: colors.textPrimary }]}>
+                      {formatCurrency(p.revenue)}
+                    </Text>
+                  </View>
                 </View>
-                <Text style={[styles.topProductName, { color: colors.textPrimary }]} numberOfLines={1}>
-                  {p.name}
-                </Text>
-                <View style={styles.topProductRight}>
-                  <Text style={[styles.topProductRevenue, { color: colors.primary }]}>
-                    {formatCurrency(p.revenue)}
-                  </Text>
-                  <Text style={[styles.topProductQty, { color: colors.textSecondary }]}>
-                    Qty: {p.qty.toFixed(0)}
-                  </Text>
-                </View>
-              </View>
-            ))}
-          </View>
+              ))}
+            </GlassCard>
+          </Animated.View>
         )}
 
         {paymentBreakdown.length > 0 && (
-          <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
-            <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Payment Breakdown</Text>
-            {paymentBreakdown.map(([mode, amount]) => {
-              const pct = totalRevenue > 0 ? (amount / totalRevenue) * 100 : 0;
-              return (
-                <View key={mode} style={styles.payRow}>
-                  <Text style={[styles.payMode, { color: colors.textPrimary }]}>{mode}</Text>
-                  <View style={styles.payBar}>
-                    <View style={[styles.payBarFill, { width: `${pct}%` as any, backgroundColor: colors.primary }]} />
+          <Animated.View entering={FadeInDown.delay(300)}>
+            <GlassCard style={styles.section} intensity={5} borderRadius={32}>
+              <Text style={[styles.sectionTitle, { color: colors.textPrimary, marginBottom: 8 }]}>Payment Modes</Text>
+              {paymentBreakdown.map(([mode, amount], i) => {
+                const pct = totalRevenue > 0 ? (amount / totalRevenue) * 100 : 0;
+                return (
+                  <View key={mode} style={[styles.payRow, i !== paymentBreakdown.length - 1 && { borderBottomColor: colors.border + '30', borderBottomWidth: 1 }]}>
+                    <View style={styles.payModeBox}>
+                       <MaterialCommunityIcons 
+                          name={mode === "UPI" ? "qrcode-scan" : mode === "Card" ? "credit-card-outline" : "cash"} 
+                          size={18} 
+                          color={colors.textSecondary} 
+                       />
+                       <Text style={[styles.payMode, { color: colors.textPrimary }]}>{mode}</Text>
+                    </View>
+                    <View style={styles.payBarWrapper}>
+                       <Text style={[styles.payPct, { color: colors.textSecondary }]}>{pct.toFixed(0)}%</Text>
+                       <View style={styles.payBar}>
+                         <LinearGradient
+                            colors={[colors.primary, colors.secondary]}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 0 }}
+                            style={[styles.payBarFill, { width: `${pct}%` as any }]}
+                         />
+                       </View>
+                    </View>
+                    <Text style={[styles.payAmount, { color: colors.textPrimary }]}>
+                      {formatCurrency(amount)}
+                    </Text>
                   </View>
-                  <Text style={[styles.payAmount, { color: colors.textSecondary }]}>
-                    {pct.toFixed(0)}%
-                  </Text>
-                  <Text style={[styles.payAmount, { color: colors.primary }]}>
-                    {formatCurrency(amount)}
-                  </Text>
-                </View>
-              );
-            })}
-          </View>
+                );
+              })}
+            </GlassCard>
+          </Animated.View>
         )}
       </ScrollView>
+
+      {/* Decorative Orbs */}
+      <View style={[styles.orb, { backgroundColor: colors.primary + '08', top: -50, right: -50 }]} />
+      <View style={[styles.orb, { backgroundColor: colors.success + '05', bottom: 200, left: -100 }]} />
     </View>
   );
 }
 
-function StatCard({ label, value, icon, color, bg, colors }: {
+function StatCard({ label, value, prefix, icon, color, colors, delay }: {
   label: string;
-  value: string;
-  icon: keyof typeof Feather.glyphMap;
+  value: number;
+  prefix?: string;
+  icon: keyof typeof MaterialCommunityIcons.glyphMap;
   color: string;
-  bg: string;
   colors: any;
+  delay: number;
 }) {
   return (
-    <View style={[styles.statCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-      <View style={[styles.statIcon, { backgroundColor: bg }]}>
-        <Feather name={icon} size={18} color={color} />
-      </View>
-      <Text style={[styles.statValue, { color: colors.textPrimary }]}>{value}</Text>
-      <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{label}</Text>
-    </View>
+    <Animated.View entering={ZoomIn.delay(delay)} style={styles.statCardWrapper}>
+      <GlassCard intensity={12} borderRadius={28} style={styles.statCardInner}>
+        <View style={styles.statTop}>
+           <View style={[styles.statIconBox, { backgroundColor: color + "15" }]}>
+             <MaterialCommunityIcons name={icon} size={22} color={color} />
+           </View>
+        </View>
+        <View style={styles.statContent}>
+          <AnimatedCounter 
+             value={value} 
+             prefix={prefix} 
+             style={[styles.statValue, { color: colors.textPrimary }]} 
+          />
+          <Text style={[styles.statLabel, { color: colors.textSecondary }]} numberOfLines={1}>{label}</Text>
+        </View>
+      </GlassCard>
+    </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
   header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingHorizontal: 24,
+    paddingBottom: 24,
+    gap: 20,
     borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0,0,0,0.03)',
+    zIndex: 10,
   },
-  title: { fontSize: 24, fontWeight: "800" },
-  periodToggle: { flexDirection: "row", borderRadius: 10, padding: 3, gap: 2 },
-  periodBtn: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 },
-  periodText: { fontSize: 13, fontWeight: "600" },
+  headerInfo: { flex: 1 },
+  title: { fontSize: 32, fontWeight: "900", letterSpacing: -1 },
+  subtitleRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 },
+  subtitle: { fontSize: 13, fontWeight: "800", textTransform: 'uppercase', letterSpacing: 0.5 },
+  periodToggle: { 
+    flexDirection: "row", 
+    borderRadius: 20, 
+    padding: 6, 
+    gap: 4,
+  },
+  periodBtn: { 
+     flex: 1,
+     paddingVertical: 10, 
+     borderRadius: 14,
+     alignItems: 'center',
+     justifyContent: 'center',
+  },
+  periodText: { fontSize: 14, fontWeight: "800", textTransform: 'uppercase', letterSpacing: 0.5 },
   content: { padding: 16, gap: 16 },
-  statsGrid: { flexDirection: "row", flexWrap: "wrap", gap: 12 },
-  statCard: {
-    width: "47%",
+  statsGrid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", gap: 12 },
+  statCardWrapper: { width: "48%" },
+  statCardInner: { padding: 20, gap: 16 },
+  statTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  statIconBox: {
+    width: 48,
+    height: 48,
     borderRadius: 16,
-    borderWidth: 1,
-    padding: 14,
-    gap: 6,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  statIcon: {
+  statContent: { gap: 4 },
+  statValue: { fontSize: 24, fontWeight: "900", letterSpacing: -0.5 },
+  statLabel: { fontSize: 13, fontWeight: '700' },
+  section: {
+    padding: 24,
+    gap: 16,
+  },
+  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+  sectionTitle: { fontSize: 20, fontWeight: "900", letterSpacing: -0.3 },
+  infoBtn: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.02)', borderRadius: 18 },
+  chartArea: { height: 180, marginTop: 8 },
+  bars: { flexDirection: "row", alignItems: "flex-end", height: 150, gap: 6 },
+  barCol: { flex: 1, alignItems: "center", gap: 10 },
+  barWrapper: { flex: 1, justifyContent: "flex-end", width: "100%", alignItems: "center" },
+  bar: { width: "100%", maxWidth: 36, borderRadius: 8, minHeight: 12 },
+  barDate: { fontSize: 11, fontWeight: '800' },
+  topProductRow: { flexDirection: "row", alignItems: "center", gap: 14, paddingVertical: 16 },
+  rankBadge: {
     width: 36,
     height: 36,
-    borderRadius: 10,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 2,
-  },
-  statValue: { fontSize: 20, fontWeight: "800" },
-  statLabel: { fontSize: 12 },
-  section: {
-    borderRadius: 16,
-    borderWidth: 1,
-    padding: 16,
-    gap: 14,
-  },
-  sectionTitle: { fontSize: 17, fontWeight: "700" },
-  chartArea: { height: 150 },
-  bars: { flexDirection: "row", alignItems: "flex-end", height: 130, gap: 6 },
-  barCol: { flex: 1, alignItems: "center", gap: 4 },
-  barWrapper: { flex: 1, justifyContent: "flex-end", width: "100%", alignItems: "center" },
-  bar: { width: "80%", borderRadius: 4, minHeight: 4 },
-  barDate: { fontSize: 9, textAlign: "center" },
-  topProductRow: { flexDirection: "row", alignItems: "center", gap: 10 },
-  rankBadge: {
-    width: 28,
-    height: 28,
-    borderRadius: 8,
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
   },
-  rankText: { fontSize: 12, fontWeight: "700" },
-  topProductName: { flex: 1, fontSize: 14, fontWeight: "600" },
-  topProductRight: { alignItems: "flex-end" },
-  topProductRevenue: { fontSize: 14, fontWeight: "700" },
-  topProductQty: { fontSize: 12 },
-  payRow: { flexDirection: "row", alignItems: "center", gap: 10 },
-  payMode: { width: 60, fontSize: 13, fontWeight: "600" },
-  payBar: { flex: 1, height: 8, backgroundColor: "#F0F0F0", borderRadius: 4, overflow: "hidden" },
+  rankText: { fontSize: 14, fontWeight: "900" },
+  topProductInfo: { flex: 1, gap: 4 },
+  topProductName: { fontSize: 16, fontWeight: "800" },
+  topProductQty: { fontSize: 13, fontWeight: '700' },
+  topProductRight: { alignItems: "flex-end", justifyContent: 'center' },
+  topProductRevenue: { fontSize: 16, fontWeight: "900" },
+  payRow: { flexDirection: "row", alignItems: "center", gap: 16, paddingVertical: 16 },
+  payModeBox: { width: 80, flexDirection: 'row', alignItems: 'center', gap: 6 },
+  payMode: { fontSize: 14, fontWeight: "800" },
+  payBarWrapper: { flex: 1, gap: 6 },
+  payPct: { fontSize: 11, fontWeight: '800' },
+  payBar: { height: 8, backgroundColor: 'rgba(0,0,0,0.04)', borderRadius: 4, overflow: "hidden" },
   payBarFill: { height: "100%", borderRadius: 4 },
-  payAmount: { fontSize: 12, fontWeight: "600", minWidth: 35, textAlign: "right" },
+  payAmount: { fontSize: 15, fontWeight: "900", minWidth: 60, textAlign: "right" },
+  orb: { position: 'absolute', width: 300, height: 300, borderRadius: 150, zIndex: -1 },
 });

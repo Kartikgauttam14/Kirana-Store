@@ -7,7 +7,7 @@
 ---
 
 **Project:** KiranaAI
-**Generated:** 2026-04-09 05:24:57
+**Generated:** 2026-04-10 07:36:19
 **Category:** E-commerce Luxury
 
 ---
@@ -18,24 +18,24 @@
 
 | Role | Hex | CSS Variable |
 |------|-----|--------------|
-| Primary | `#F59E0B` | `--color-primary` |
-| Secondary | `#FBBF24` | `--color-secondary` |
-| CTA/Accent | `#8B5CF6` | `--color-cta` |
-| Background | `#0F172A` | `--color-background` |
-| Text | `#F8FAFC` | `--color-text` |
+| Primary | `#1C1917` | `--color-primary` |
+| Secondary | `#44403C` | `--color-secondary` |
+| CTA/Accent | `#CA8A04` | `--color-cta` |
+| Background | `#FAFAF9` | `--color-background` |
+| Text | `#0C0A09` | `--color-text` |
 
-**Color Notes:** Gold trust + purple tech
+**Color Notes:** Premium dark + gold accent
 
 ### Typography
 
-- **Heading Font:** Rubik
-- **Body Font:** Nunito Sans
-- **Mood:** ecommerce, clean, shopping, product, retail, conversion
-- **Google Fonts:** [Rubik + Nunito Sans](https://fonts.google.com/share?selection.family=Nunito+Sans:wght@300;400;500;600;700|Rubik:wght@300;400;500;600;700)
+- **Heading Font:** Cormorant
+- **Body Font:** Montserrat
+- **Mood:** luxury, high-end, fashion, elegant, refined, premium
+- **Google Fonts:** [Cormorant + Montserrat](https://fonts.google.com/share?selection.family=Cormorant:wght@400;500;600;700|Montserrat:wght@300;400;500;600;700)
 
 **CSS Import:**
 ```css
-@import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;500;600;700&family=Rubik:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant:wght@400;500;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap');
 ```
 
 ### Spacing Variables
@@ -68,7 +68,7 @@
 ```css
 /* Primary Button */
 .btn-primary {
-  background: #8B5CF6;
+  background: #CA8A04;
   color: white;
   padding: 12px 24px;
   border-radius: 8px;
@@ -85,8 +85,8 @@
 /* Secondary Button */
 .btn-secondary {
   background: transparent;
-  color: #F59E0B;
-  border: 2px solid #F59E0B;
+  color: #1C1917;
+  border: 2px solid #1C1917;
   padding: 12px 24px;
   border-radius: 8px;
   font-weight: 600;
@@ -99,7 +99,7 @@
 
 ```css
 .card {
-  background: #0F172A;
+  background: #FAFAF9;
   border-radius: 12px;
   padding: 24px;
   box-shadow: var(--shadow-md);
@@ -125,9 +125,9 @@
 }
 
 .input:focus {
-  border-color: #F59E0B;
+  border-color: #1C1917;
   outline: none;
-  box-shadow: 0 0 0 3px #F59E0B20;
+  box-shadow: 0 0 0 3px #1C191720;
 }
 ```
 
@@ -163,10 +163,11 @@
 
 ### Page Pattern
 
-**Pattern Name:** Feature-Rich Showcase
+**Pattern Name:** App Store Style Landing
 
-- **CTA Placement:** Above fold
-- **Section Order:** Hero > Features > CTA
+- **Conversion Strategy:** Show real screenshots. Include ratings (4.5+ stars). QR code for mobile. Platform-specific CTAs.
+- **CTA Placement:** Download buttons prominent (App Store + Play Store) throughout
+- **Section Order:** 1. Hero with device mockup, 2. Screenshots carousel, 3. Features with icons, 4. Reviews/ratings, 5. Download CTAs
 
 ---
 

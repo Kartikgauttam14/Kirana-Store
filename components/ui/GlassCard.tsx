@@ -47,7 +47,10 @@ export const GlassCard: React.FC<GlassCardProps> = ({
     <Animated.View
       style={[
         styles.container,
-        { borderRadius },
+        { 
+          borderRadius,
+          ...colors.shadows.medium 
+        },
         animatedStyle,
         style,
       ]}
@@ -61,7 +64,13 @@ export const GlassCard: React.FC<GlassCardProps> = ({
           tint={tint}
           style={[styles.blur, { borderRadius }]}
         >
-          <View style={[styles.content, { borderColor: colors.border }]}>
+          <View style={[
+            styles.content, 
+            { 
+              borderColor: colors.glassBorder,
+              backgroundColor: colors.glassSurface 
+            }
+          ]}>
             {children}
           </View>
         </BlurView>
@@ -70,8 +79,8 @@ export const GlassCard: React.FC<GlassCardProps> = ({
           styles.fallback, 
           { 
             borderRadius, 
-            backgroundColor: tint === "light" ? "rgba(255,255,255,0.8)" : "rgba(15,23,42,0.8)",
-            borderColor: colors.border
+            backgroundColor: tint === "light" ? "rgba(255,255,255,0.85)" : "rgba(15,23,42,0.85)",
+            borderColor: colors.glassBorder
           }
         ]}>
           {children}
@@ -85,17 +94,6 @@ const styles = StyleSheet.create({
   container: {
     overflow: "hidden",
     backgroundColor: "transparent",
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.1,
-        shadowRadius: 12,
-      },
-      web: {
-        boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.07)",
-      }
-    })
   },
   blur: {
     flex: 1,
@@ -103,11 +101,11 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     padding: 20,
-    borderWidth: 1,
+    borderWidth: 1.5,
   },
   fallback: {
     flex: 1,
     padding: 20,
-    borderWidth: 1,
+    borderWidth: 1.5,
   }
 });
