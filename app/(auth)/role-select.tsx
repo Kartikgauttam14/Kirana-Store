@@ -17,16 +17,17 @@ import Animated, {
   FadeInUp, 
   useAnimatedStyle, 
   useSharedValue, 
-  withSpring 
+  withSpring,
+  withRepeat,
+  withTiming,
+  Easing,
 } from "react-native-reanimated";
-import { BlurView } from "expo-blur";
 
 import { useAuthStore } from "@/store/authStore";
 import { useColors } from "@/hooks/useColors";
-import { GlassCard } from "@/components/ui/GlassCard";
 import { BrandLogo } from "@/components/ui/BrandLogo";
 
-const { width } = Dimensions.get("window");
+const { width, height } = Dimensions.get("window");
 
 export default function RoleSelectScreen() {
   const colors = useColors();
@@ -40,72 +41,108 @@ export default function RoleSelectScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: "#020617" }]}>
+    <View style={styles.container}>
       <StatusBar barStyle="light-content" />
       
-      {/* Dynamic Background */}
+      {/* Animated Background */}
+      <LinearGradient 
+        colors={['#020617', '#0A1628', '#020617']} 
+        style={StyleSheet.absoluteFill}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+      />
+      
+      {/* Decorative orbs */}
       <View style={StyleSheet.absoluteFill}>
-        <View style={[styles.glowBall, { backgroundColor: colors.primary, top: '10%', left: '-20%', opacity: 0.15 }]} />
-        <View style={[styles.glowBall, { backgroundColor: colors.secondary, bottom: '20%', right: '-30%', opacity: 0.2 }]} />
-        <View style={[styles.glowBall, { backgroundColor: colors.accent, top: '40%', right: '10%', width: 200, height: 200, opacity: 0.1 }]} />
+        <View style={[styles.orb, { backgroundColor: '#10B981', top: '5%', left: '-15%', opacity: 0.08 }]} />
+        <View style={[styles.orb, { backgroundColor: '#6366F1', bottom: '10%', right: '-20%', opacity: 0.12 }]} />
+        <View style={[styles.orbSmall, { backgroundColor: '#F59E0B', top: '35%', right: '5%', opacity: 0.06 }]} />
+        <View style={[styles.orbSmall, { backgroundColor: '#10B981', bottom: '35%', left: '10%', opacity: 0.05 }]} />
       </View>
 
-      <View style={[styles.content, { paddingTop: insets.top + (Platform.OS === "web" ? 30 : 10) }]}>
-        <TouchableOpacity
-          style={styles.langToggle}
-          onPress={() => setLanguage(language === "en" ? "hi" : "en")}
-        >
-          <BlurView intensity={30} tint="dark" style={styles.langBlur}>
-            <Text style={styles.langText}>{language === "en" ? "हिंदी" : "English"}</Text>
-          </BlurView>
-        </TouchableOpacity>
+      {/* Grid pattern overlay for depth */}
+      <View style={[StyleSheet.absoluteFill, styles.gridOverlay]} />
 
-        <Animated.View 
-          entering={FadeInDown.delay(200).duration(1000)} 
-          style={styles.hero}
-        >
-          <View style={styles.logoWrapper}>
+      <View style={[styles.content, { paddingTop: insets.top + (Platform.OS === "web" ? 40 : 16) }]}>
+        {/* Language Toggle */}
+        <Animated.View entering={FadeInDown.delay(100).duration(600)}>
+          <TouchableOpacity
+            style={styles.langToggle}
+            onPress={() => setLanguage(language === "en" ? "hi" : "en")}
+            activeOpacity={0.7}
+          >
             <LinearGradient
-              colors={[colors.primary, colors.success]}
-              style={styles.logoGradient}
+              colors={['rgba(255,255,255,0.08)', 'rgba(255,255,255,0.03)']}
+              style={styles.langGradient}
             >
-              <BrandLogo size={64} />
+              <Feather name="globe" size={14} color="rgba(255,255,255,0.6)" />
+              <Text style={styles.langText}>{language === "en" ? "हिंदी" : "ENG"}</Text>
             </LinearGradient>
-            <View style={[styles.logoGlow, { backgroundColor: colors.primary }]} />
-          </View>
-          <Text style={styles.appName}>KiranaAI</Text>
-          <View style={[styles.taglineBadge, { backgroundColor: colors.primary + "20" }]}>
-            <Text style={[styles.tagline, { color: colors.primary }]}>
-              {language === "hi"
-                ? "आपकी दुकान का AI साथी"
-                : "Your Shop's AI Companion"}
-            </Text>
-          </View>
+          </TouchableOpacity>
         </Animated.View>
 
+        {/* Hero Section */}
+        <View style={styles.heroSection}>
+          <Animated.View entering={FadeInDown.delay(200).duration(800)} style={styles.logoArea}>
+            <View style={styles.logoContainer}>
+              <LinearGradient
+                colors={['#10B981', '#059669']}
+                style={styles.logoGradient}
+              >
+                <BrandLogo size={56} />
+              </LinearGradient>
+              {/* Glow ring */}
+              <View style={styles.logoRing} />
+            </View>
+          </Animated.View>
+
+          <Animated.View entering={FadeInDown.delay(400).duration(800)} style={styles.titleArea}>
+            <Text style={styles.appName}>
+              Kirana<Text style={styles.appNameAccent}>AI</Text>
+            </Text>
+            <View style={styles.taglinePill}>
+              <View style={styles.taglineDot} />
+              <Text style={styles.tagline}>
+                {language === "hi"
+                  ? "आपकी दुकान का AI साथी"
+                  : "Your Shop's AI Companion"}
+              </Text>
+            </View>
+          </Animated.View>
+        </View>
+
+        {/* Bottom Section */}
         <Animated.View 
-          entering={FadeInUp.delay(500).duration(1000)}
-          style={[styles.bottomSection, { paddingBottom: insets.bottom + 50 }]}
+          entering={FadeInUp.delay(600).duration(900)}
+          style={[styles.bottomSection, { paddingBottom: insets.bottom + 40 }]}
         >
-          <Text style={[styles.question, { color: colors.white }]}>
-            {language === "hi" ? "आप कौन हैं?" : "Who are you?"}
-          </Text>
+          <View style={styles.questionRow}>
+            <View style={styles.questionLine} />
+            <Text style={styles.question}>
+              {language === "hi" ? "आप कौन हैं?" : "Choose your role"}
+            </Text>
+            <View style={styles.questionLine} />
+          </View>
 
           <View style={styles.roleGrid}>
             <RoleCard 
               title={language === "hi" ? "दुकान मालिक" : "Store Owner"}
-              subtitle={language === "hi" ? "Manage Shop & Sales" : "Manage inventory & billing"}
+              subtitle={language === "hi" ? "दुकान और बिक्री प्रबंधित करें" : "Manage inventory, billing & analytics"}
               icon="storefront-outline"
-              color={colors.primary}
+              gradient={['#10B981', '#059669']}
+              accentColor="#10B981"
               onPress={() => selectRole("STORE_OWNER")}
+              delay={700}
             />
             
             <RoleCard 
               title={language === "hi" ? "ग्राहक" : "Customer"}
-              subtitle={language === "hi" ? "Order from nearby" : "Shop from local stores"}
+              subtitle={language === "hi" ? "नज़दीकी दुकानों से ऑर्डर करें" : "Shop & order from local stores nearby"}
               icon="shopping-outline"
-              color={colors.secondary}
+              gradient={['#6366F1', '#4F46E5']}
+              accentColor="#6366F1"
               onPress={() => selectRole("CUSTOMER")}
+              delay={850}
             />
           </View>
         </Animated.View>
@@ -114,175 +151,267 @@ export default function RoleSelectScreen() {
   );
 }
 
-function RoleCard({ title, subtitle, icon, color, onPress }: any) {
+function RoleCard({ title, subtitle, icon, gradient, accentColor, onPress, delay }: any) {
   const scale = useSharedValue(1);
-  const colors = useColors();
 
   const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: withSpring(scale.value, { damping: 12 }) }]
+    transform: [{ scale: withSpring(scale.value, { damping: 15, stiffness: 150 }) }]
   }));
 
   return (
-    <TouchableOpacity
-      onPress={onPress}
-      onPressIn={() => scale.value = 0.97}
-      onPressOut={() => scale.value = 1}
-      activeOpacity={0.9}
-      style={styles.roleOption}
-    >
-      <Animated.View style={[styles.roleCardContainer, animatedStyle]}>
-        <GlassCard intensity={25} tint="dark" style={styles.roleGlass} borderRadius={28}>
-          <LinearGradient
-            colors={[color + "25", "transparent"]}
-            style={StyleSheet.absoluteFill}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-          />
-          <View style={styles.roleCardInner}>
-             <View style={[styles.roleIconBox, { backgroundColor: color + "30", borderColor: color + "40", borderWidth: 1 }]}>
-               <MaterialCommunityIcons name={icon} size={32} color={color} />
-             </View>
-             <View style={styles.roleTextContainer}>
-               <Text style={[styles.roleTitle, { color: "#fff" }]}>{title}</Text>
-               <Text style={[styles.roleSub, { color: "rgba(255,255,255,0.7)" }]}>{subtitle}</Text>
-             </View>
-             <View style={[styles.roleArrow, { backgroundColor: color + '20' }]}>
-               <Feather name="arrow-right" size={20} color={color} />
-             </View>
+    <Animated.View entering={FadeInUp.delay(delay).duration(700)}>
+      <TouchableOpacity
+        onPress={onPress}
+        onPressIn={() => scale.value = 0.96}
+        onPressOut={() => scale.value = 1}
+        activeOpacity={1}
+      >
+        <Animated.View style={animatedStyle}>
+          <View style={styles.roleCard}>
+            {/* Background gradient accent */}
+            <LinearGradient
+              colors={[accentColor + '15', 'transparent']}
+              style={[StyleSheet.absoluteFill, { borderRadius: 24 }]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            />
+            
+            <View style={styles.roleCardContent}>
+              {/* Icon section */}
+              <View style={styles.roleIconSection}>
+                <LinearGradient
+                  colors={gradient}
+                  style={styles.roleIconGradient}
+                >
+                  <MaterialCommunityIcons name={icon} size={28} color="#fff" />
+                </LinearGradient>
+              </View>
+              
+              {/* Text section */}
+              <View style={styles.roleTextSection}>
+                <Text style={styles.roleTitle}>{title}</Text>
+                <Text style={styles.roleSub}>{subtitle}</Text>
+              </View>
+              
+              {/* Arrow */}
+              <View style={[styles.roleArrow, { backgroundColor: accentColor + '15' }]}>
+                <Feather name="arrow-right" size={18} color={accentColor} />
+              </View>
+            </View>
+            
+            {/* Bottom accent line */}
+            <LinearGradient
+              colors={[...gradient, 'transparent']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.roleAccentLine}
+            />
           </View>
-        </GlassCard>
-      </Animated.View>
-    </TouchableOpacity>
+        </Animated.View>
+      </TouchableOpacity>
+    </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  container: { flex: 1, backgroundColor: '#020617' },
   content: { flex: 1, paddingHorizontal: 24, zIndex: 1 },
-  glowBall: {
+  
+  // Background
+  orb: {
     position: "absolute",
-    width: 400,
-    height: 400,
-    borderRadius: 200,
+    width: 350,
+    height: 350,
+    borderRadius: 175,
   },
+  orbSmall: {
+    position: "absolute",
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+  },
+  gridOverlay: {
+    opacity: 0.02,
+    ...(Platform.OS === 'web' ? {
+      backgroundImage: 'radial-gradient(rgba(255,255,255,0.3) 1px, transparent 1px)',
+      backgroundSize: '30px 30px',
+    } : {}),
+  },
+  
+  // Language Toggle
   langToggle: {
     alignSelf: "flex-end",
-    borderRadius: 20,
+    borderRadius: 16,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.1)",
+    borderColor: "rgba(255,255,255,0.08)",
   },
-  langBlur: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+  langGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
   },
-  langText: { color: "#fff", fontWeight: "800", fontSize: 13, textTransform: 'uppercase' },
-  hero: { flex: 1, alignItems: "center", justifyContent: "center", gap: 20 },
-  logoWrapper: {
+  langText: { 
+    color: "rgba(255,255,255,0.7)", 
+    fontWeight: "700", 
+    fontSize: 13, 
+    letterSpacing: 0.5,
+  },
+  
+  // Hero
+  heroSection: { 
+    flex: 1, 
+    alignItems: "center", 
+    justifyContent: "center",
+    gap: 28,
+  },
+  logoArea: {
+    alignItems: 'center',
+  },
+  logoContainer: {
     position: 'relative',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  logoGlow: {
-    position: 'absolute',
+  logoGradient: {
     width: 100,
     height: 100,
-    borderRadius: 50,
-    filter: 'blur(30px)',
-    zIndex: -1,
-  },
-  logoGradient: {
-    width: 110,
-    height: 110,
-    borderRadius: 35,
+    borderRadius: 32,
     alignItems: "center",
     justifyContent: "center",
-    transform: [{ rotate: "-8deg" }],
     ...Platform.select({
-        ios: {
-            shadowColor: "#10B981",
-            shadowOffset: { width: 0, height: 10 },
-            shadowOpacity: 0.4,
-            shadowRadius: 20,
-        }
-    })
+      ios: {
+        shadowColor: "#10B981",
+        shadowOffset: { width: 0, height: 12 },
+        shadowOpacity: 0.4,
+        shadowRadius: 24,
+      },
+      web: {
+        boxShadow: '0 12px 40px rgba(16, 185, 129, 0.3)',
+      },
+    }),
+  },
+  logoRing: {
+    position: 'absolute',
+    width: 120,
+    height: 120,
+    borderRadius: 40,
+    borderWidth: 1,
+    borderColor: 'rgba(16,185,129,0.15)',
+  },
+  titleArea: {
+    alignItems: 'center',
+    gap: 14,
   },
   appName: {
-    fontSize: 52,
+    fontSize: 48,
     fontWeight: "900",
     color: "#fff",
-    letterSpacing: -1.5,
-    marginTop: 10,
+    letterSpacing: -2,
   },
-  taglineBadge: {
-    paddingHorizontal: 20,
+  appNameAccent: {
+    color: '#10B981',
+  },
+  taglinePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 18,
     paddingVertical: 8,
     borderRadius: 100,
+    backgroundColor: 'rgba(16,185,129,0.08)',
     borderWidth: 1,
-    borderColor: 'rgba(16, 185, 129, 0.2)',
+    borderColor: 'rgba(16,185,129,0.12)',
+  },
+  taglineDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#10B981',
   },
   tagline: {
-    fontSize: 15,
-    fontWeight: "800",
-    textTransform: 'uppercase',
-    letterSpacing: 1,
+    fontSize: 13,
+    fontWeight: "700",
+    color: 'rgba(255,255,255,0.6)',
+    letterSpacing: 0.5,
   },
+  
+  // Bottom
   bottomSection: {
-    gap: 30,
+    gap: 24,
   },
-  question: {
-    fontSize: 28,
-    fontWeight: "900",
-    textAlign: "center",
-    letterSpacing: -0.5,
-  },
-  roleGrid: {
-    flexDirection: "column",
-    gap: 16,
-  },
-  roleOption: {
-    width: '100%',
-  },
-  roleCardContainer: {
-    width: '100%',
-  },
-  roleGlass: {
-    padding: 20,
-    borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.08)',
-    overflow: 'hidden',
-  },
-  roleCardInner: {
+  questionRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 16,
+    paddingHorizontal: 4,
   },
-  roleIconBox: {
-    width: 64,
-    height: 64,
-    borderRadius: 20,
+  questionLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+  },
+  question: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "rgba(255,255,255,0.4)",
+    textTransform: 'uppercase',
+    letterSpacing: 2,
+  },
+  roleGrid: {
+    flexDirection: "column",
+    gap: 14,
+  },
+  
+  // Role Card
+  roleCard: {
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    overflow: 'hidden',
+  },
+  roleCardContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+    padding: 20,
+  },
+  roleIconSection: {},
+  roleIconGradient: {
+    width: 56,
+    height: 56,
+    borderRadius: 18,
     alignItems: "center",
     justifyContent: "center",
   },
-  roleTextContainer: {
+  roleTextSection: {
     flex: 1,
     gap: 4,
   },
   roleTitle: { 
-    fontSize: 22, 
-    fontWeight: "900", 
+    fontSize: 20, 
+    fontWeight: "800", 
+    color: '#fff',
     letterSpacing: -0.5,
   },
   roleSub: { 
-    fontSize: 14, 
-    fontWeight: '600',
-    lineHeight: 20,
+    fontSize: 13, 
+    fontWeight: '500',
+    color: 'rgba(255,255,255,0.5)',
+    lineHeight: 18,
   },
   roleArrow: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 40,
+    height: 40,
+    borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
+  },
+  roleAccentLine: {
+    height: 2,
+    width: '100%',
   },
 });
