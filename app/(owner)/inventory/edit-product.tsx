@@ -58,11 +58,11 @@ export default function EditProductScreen() {
   const margin =
     form.costPrice && form.sellingPrice
       ? (
-          ((parseFloat(form.sellingPrice) - parseFloat(form.costPrice)) /
-            parseFloat(form.costPrice)) *
+          ((parseFloat(form.sellingPrice) || 0) - (parseFloat(form.costPrice) || 0)) /
+          (parseFloat(form.costPrice) || 1) *
           100
         ).toFixed(1)
-      : null;
+      : "0.0";
 
   const handleSave = () => {
     if (!form.name || !form.sellingPrice) {

@@ -2,6 +2,7 @@ import { Feather, MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useMemo } from "react";
 import {
+  Alert,
   Image,
   Platform,
   ScrollView,
@@ -49,20 +50,23 @@ export default function CustomerHomeScreen() {
         }]}
       >
         <View style={styles.headerContent}>
-          <View style={styles.locationContainer}>
-            <View style={[styles.locationIcon, { backgroundColor: colors.primaryLight }]}>
-              <Feather name="map-pin" size={14} color={colors.primary} />
-            </View>
-            <View>
-              <View style={styles.deliveryRow}>
-                <Text style={[styles.deliveryText, { color: colors.textPrimary }]}>
-                  {language === 'hi' ? "10-15 मिनट में डिलीवरी" : "Delivery in 10-15 mins"}
-                </Text>
-                <Feather name="chevron-down" size={12} color={colors.textSecondary} />
+            <TouchableOpacity 
+              style={styles.locationContainer}
+              onPress={() => Alert.alert(language === 'hi' ? "स्थान बदलें" : "Change Location", language === 'hi' ? "लोकेशन सेवा जल्द उपलब्ध होगी।" : "Location selection is coming soon!")}
+            >
+              <View style={[styles.locationIcon, { backgroundColor: colors.primaryLight }]}>
+                <Feather name="map-pin" size={14} color={colors.primary} />
               </View>
-              <Text style={[styles.cityText, { color: colors.textSecondary }]}>New Delhi, India</Text>
-            </View>
-          </View>
+              <View>
+                <View style={styles.deliveryRow}>
+                  <Text style={[styles.deliveryText, { color: colors.textPrimary }]}>
+                    {language === 'hi' ? "10-15 मिनट में डिलीवरी" : "Delivery in 10-15 mins"}
+                  </Text>
+                  <Feather name="chevron-down" size={12} color={colors.textSecondary} />
+                </View>
+                <Text style={[styles.cityText, { color: colors.textSecondary }]}>New Delhi, India</Text>
+              </View>
+            </TouchableOpacity>
           <TouchableOpacity 
             style={[styles.profileBtn, { backgroundColor: colors.gray100 }]}
             onPress={() => router.push("/(customer)/profile" as any)}
@@ -75,6 +79,7 @@ export default function CustomerHomeScreen() {
         <TouchableOpacity 
           style={[styles.searchBar, { backgroundColor: colors.gray100 }]}
           activeOpacity={0.9}
+          onPress={() => router.push("/(customer)/search" as any)}
         >
           <Feather name="search" size={18} color={colors.primary} />
           <Text style={[styles.searchPlaceholder, { color: colors.textPlaceholder }]}>
@@ -105,7 +110,10 @@ export default function CustomerHomeScreen() {
               <Text style={styles.heroBadge}>{language === 'hi' ? "वीकेंड सेल" : "WEEKEND SALE"}</Text>
               <Text style={styles.heroTitle}>{language === 'hi' ? "50% तक की छूट" : "Up to 50% Off"}</Text>
               <Text style={styles.heroSub}>{language === 'hi' ? "घर की ज़रूरी चीज़ों पर" : "On Household Essentials"}</Text>
-              <TouchableOpacity style={styles.heroBtn}>
+              <TouchableOpacity 
+                style={styles.heroBtn}
+                onPress={() => router.push("/(customer)/stores" as any)}
+              >
                 <Text style={[styles.heroBtnText, { color: colors.primary }]}>{language === 'hi' ? "अभी खरीदें" : "Shop Now"}</Text>
               </TouchableOpacity>
             </View>
@@ -124,7 +132,10 @@ export default function CustomerHomeScreen() {
               <Text style={styles.heroBadge}>{language === 'hi' ? "नई आवक" : "NEW ARRIVALS"}</Text>
               <Text style={styles.heroTitle}>{language === 'hi' ? "ताज़ा बेकरी" : "Fresh Bakery"}</Text>
               <Text style={styles.heroSub}>{language === 'hi' ? "KiranaAI से ताज़ा और गर्म" : "Delivered Warm from KiranaAI"}</Text>
-              <TouchableOpacity style={[styles.heroBtn, { backgroundColor: "#fff" }]}>
+              <TouchableOpacity 
+                style={[styles.heroBtn, { backgroundColor: colors.white }]}
+                onPress={() => router.push("/(customer)/stores" as any)}
+              >
                 <Text style={[styles.heroBtnText, { color: colors.secondary }]}>{language === 'hi' ? "देखें" : "Explore"}</Text>
               </TouchableOpacity>
             </View>
@@ -140,7 +151,7 @@ export default function CustomerHomeScreen() {
             <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
               {language === 'hi' ? "श्रेणियाँ" : "Categories"}
             </Text>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={() => router.push("/(customer)/stores" as any)}>
               <Text style={[styles.viewAll, { color: colors.primary }]}>
                 {language === 'hi' ? "सभी देखें" : "See All"}
               </Text>
@@ -152,6 +163,7 @@ export default function CustomerHomeScreen() {
                 <TouchableOpacity
                   style={[styles.catItem]}
                   activeOpacity={0.7}
+                  onPress={() => router.push({ pathname: "/(customer)/search", params: { query: cat.label } } as any)}
                 >
                   <View style={[styles.catIconContainer, { backgroundColor: colors.gray100 }]}>
                     <MaterialIcons name={cat.icon as any} size={32} color={colors.primary} />
@@ -318,7 +330,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   heroBtn: {
-    backgroundColor: "#fff",
+    backgroundColor: "transparent",
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 10,

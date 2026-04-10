@@ -33,12 +33,12 @@ export default function OwnerLayout() {
         tabBarLabelStyle: { fontSize: 11, fontWeight: "700", marginTop: -2 },
         tabBarStyle: {
           position: "absolute",
-          backgroundColor: isIOS ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.95)",
+          backgroundColor: isIOS ? "rgba(1,8,22,0.7)" : colors.background,
           borderTopWidth: 0,
           elevation: 10,
           shadowColor: '#000',
           shadowOffset: { width: 0, height: -4 },
-          shadowOpacity: 0.05,
+          shadowOpacity: 0.1,
           shadowRadius: 10,
           height: isWeb ? 84 : 65,
           paddingBottom: isIOS ? 20 : 8,
@@ -47,12 +47,12 @@ export default function OwnerLayout() {
         tabBarBackground: () =>
           isIOS ? (
             <BlurView
-              intensity={40}
-              tint="light"
+              intensity={60}
+              tint="dark"
               style={StyleSheet.absoluteFill}
             />
           ) : isWeb ? (
-            <View style={[StyleSheet.absoluteFill, { backgroundColor: "rgba(255,255,255,0.9)" }]} />
+            <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.background }]} />
           ) : null,
       }}
     >
@@ -95,6 +95,7 @@ export default function OwnerLayout() {
       <Tabs.Screen name="inventory/edit-product" options={{ href: null }} />
       <Tabs.Screen name="billing/history" options={{ href: null }} />
       <Tabs.Screen name="billing/khata" options={{ href: null }} />
+      <Tabs.Screen name="stores/add-store" options={{ href: null }} />
     </Tabs>
   );
 }

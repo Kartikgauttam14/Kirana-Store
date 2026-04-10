@@ -82,10 +82,10 @@ export default function InventoryScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <StatusBar barStyle="dark-content" />
+      <StatusBar barStyle="light-content" />
       <BlurView
         intensity={60}
-        tint="light"
+        tint="dark"
         style={[styles.header, { paddingTop: insets.top + (Platform.OS === "web" ? 30 : 10) }]}
       >
          <View style={styles.headerInfo}>
@@ -245,8 +245,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0,0,0,0.03)',
-    backgroundColor: Platform.OS === 'android' ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.6)',
+    borderBottomColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: Platform.OS === 'android' ? '#010816' : 'rgba(1,8,22,0.7)',
     shadowColor: '#B46414',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.08,

@@ -58,11 +58,11 @@ export default function AddProductScreen() {
   const margin =
     form.costPrice && form.sellingPrice
       ? (
-          ((parseFloat(form.sellingPrice) - parseFloat(form.costPrice)) /
-            parseFloat(form.costPrice)) *
+          ((parseFloat(form.sellingPrice) || 0) - (parseFloat(form.costPrice) || 0)) /
+          (parseFloat(form.costPrice) || 1) *
           100
         ).toFixed(1)
-      : null;
+      : "0.0";
 
   const handleSave = () => {
     if (!form.name || !form.costPrice || !form.sellingPrice || !form.currentStock) {
@@ -388,7 +388,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 24,
     paddingVertical: 20,
-    backgroundColor: '#fff',
+    backgroundColor: 'transparent',
     borderBottomLeftRadius: 32,
     borderBottomRightRadius: 32,
     elevation: 4,

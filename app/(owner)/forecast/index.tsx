@@ -82,7 +82,7 @@ export default function ForecastScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <StatusBar barStyle="dark-content" />
+      <StatusBar barStyle="light-content" />
       <View style={[styles.header, { paddingTop: insets.top + (Platform.OS === "web" ? 20 : 10) }]}>
         <View style={styles.headerTop}>
           <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>

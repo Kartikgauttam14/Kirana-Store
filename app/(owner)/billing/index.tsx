@@ -232,7 +232,7 @@ export default function BillingScreen() {
                <MaterialCommunityIcons name="barcode-scan" size={20} color={colors.primary} />
                <Text style={[styles.sectionTitle, { color: colors.primary }]}>Add Product</Text>
             </View>
-            <View style={[styles.searchRow, { backgroundColor: '#fff', borderColor: colors.border, ...colors.shadows.soft }]}>
+            <View style={[styles.searchRow, { backgroundColor: colors.glassSurface, borderColor: colors.border, ...colors.shadows.soft }]}>
               <Feather name="search" size={20} color={colors.primary} />
               <TextInput
                 style={[styles.searchInput, { color: colors.textPrimary }]}

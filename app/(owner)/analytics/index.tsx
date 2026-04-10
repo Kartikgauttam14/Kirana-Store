@@ -76,7 +76,7 @@ export default function AnalyticsScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <StatusBar barStyle="dark-content" />
+      <StatusBar barStyle="light-content" />
       <View style={[styles.header, { paddingTop: insets.top + (Platform.OS === "web" ? 30 : 10) }]}>
          <View style={styles.headerInfo}>
             <Text style={[styles.title, { color: colors.textPrimary }]}>Business Insights</Text>
@@ -91,7 +91,7 @@ export default function AnalyticsScreen() {
               key={p}
               style={[
                 styles.periodBtn, 
-                period === p && { backgroundColor: '#fff', elevation: 2, shadowColor: '#000', shadowOffset: {width: 0, height: 2}, shadowOpacity: 0.1, shadowRadius: 4 }
+                period === p && { backgroundColor: colors.card, elevation: 2, shadowColor: '#000', shadowOffset: {width: 0, height: 2}, shadowOpacity: 0.1, shadowRadius: 4 }
               ]}
               onPress={() => setPeriod(p)}
               activeOpacity={0.8}
@@ -164,7 +164,7 @@ export default function AnalyticsScreen() {
                       {p.name}
                     </Text>
                     <Text style={[styles.topProductQty, { color: colors.textSecondary }]}>
-                      {p.qty.toFixed(0)} units sold
+                      {(p.qty || 0).toFixed(0)} units sold
                     </Text>
                   </View>
                   <View style={styles.topProductRight}>

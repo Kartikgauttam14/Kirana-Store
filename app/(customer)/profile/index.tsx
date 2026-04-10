@@ -59,22 +59,22 @@ export default function ProfileScreen() {
     onPress?: () => void;
     color?: string;
   }> = [
-    { icon: "map-marker-radius-outline", label: language === 'hi' ? "मेरे पते" : "Saved Addresses", color: colors.secondary },
+    { icon: "map-marker-radius-outline", label: language === 'hi' ? "मेरे पते" : "Saved Addresses", color: colors.secondary, onPress: () => router.push("/(customer)/profile/addresses" as any) },
     { icon: "shopping-outline", label: language === 'hi' ? "मेरे ऑर्डर" : "My Orders", onPress: () => router.push("/(customer)/orders/index" as any), color: colors.primary },
-    { icon: "wallet-outline", label: language === 'hi' ? "बटुआ" : "Kirana Wallet", color: '#F59E0B' },
-    { icon: "gift-outline", label: language === 'hi' ? "रेफ़र करें" : "Refer & Earn", color: '#10B981' },
-    { icon: "shield-check-outline", label: language === 'hi' ? "सुरक्षा" : "Privacy & Safety", color: '#6366F1' },
-    { icon: "help-circle-outline", label: language === 'hi' ? "सहायता" : "Help Support", color: '#94A3B8' },
+    { icon: "wallet-outline", label: language === 'hi' ? "बटुआ" : "Kirana Wallet", color: '#F59E0B', onPress: () => router.push("/(customer)/profile/wallet" as any) },
+    { icon: "gift-outline", label: language === 'hi' ? "रेफ़र करें" : "Refer & Earn", color: '#10B981', onPress: () => router.push("/(customer)/profile/referral" as any) },
+    { icon: "shield-check-outline", label: language === 'hi' ? "सुरक्षा" : "Privacy & Safety", color: '#6366F1', onPress: () => router.push("/(customer)/profile/privacy" as any) },
+    { icon: "help-circle-outline", label: language === 'hi' ? "सहायता" : "Help Support", color: '#94A3B8', onPress: () => router.push("/(customer)/profile/help" as any) },
   ];
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <StatusBar barStyle="dark-content" />
+      <StatusBar barStyle="light-content" />
       
       {/* Premium Header */}
       <BlurView
         intensity={80}
-        tint="extraLight"
+        tint="dark"
         style={[styles.header, { paddingTop: insets.top + (Platform.OS === "web" ? 20 : 0) }]}
       >
          <View style={styles.headerContent}>
@@ -118,7 +118,10 @@ export default function ProfileScreen() {
                  <MaterialCommunityIcons name="phone" size={14} color={colors.textSecondary} />
                  <Text style={[styles.userPhone, { color: colors.textSecondary }]}>+91 {user?.phone ?? "XXXXXXXXXX"}</Text>
                </View>
-               <TouchableOpacity style={[styles.editBtn, { backgroundColor: colors.primary + '15' }]}>
+               <TouchableOpacity 
+                 style={[styles.editBtn, { backgroundColor: colors.primary + '15' }]}
+                 onPress={() => router.push("/(customer)/profile/edit" as any)}
+               >
                   <Text style={{ color: colors.primary, fontWeight: '800', fontSize: 13 }}>Edit Details</Text>
                </TouchableOpacity>
             </View>

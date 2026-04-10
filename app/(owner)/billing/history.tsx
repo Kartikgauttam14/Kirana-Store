@@ -37,7 +37,7 @@ export default function BillingHistoryScreen() {
 
   const shareBill = async (bill: Bill) => {
     const itemsText = bill.items
-      .map((i) => `${i.productName}: ${i.quantity} × ₹${i.unitPrice} = ₹${i.totalPrice.toFixed(0)}`)
+      .map((i) => `${i.productName}: ${i.quantity} × ₹${i.unitPrice} = ₹${(i.totalPrice || 0).toFixed(0)}`)
       .join("\n");
 
     const message = `*${activeStore?.name ?? "KiranaAI"}*\nBill #${bill.billNumber}\n${formatDateTime(bill.createdAt)}\n\n${itemsText}\n\nSubtotal: ₹${bill.subtotal.toFixed(0)}\nGST: ₹${bill.gstTotal.toFixed(0)}\n*Total: ₹${bill.grandTotal.toFixed(0)}*\n\nPayment: ${bill.paymentMode} | ${bill.isPaid ? "PAID" : "CREDIT"}`;

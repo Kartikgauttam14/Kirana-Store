@@ -58,7 +58,7 @@ export default function DashboardScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <StatusBar barStyle="dark-content" />
+      <StatusBar barStyle="light-content" />
       <StoreHeader />
       
       <ScrollView
@@ -83,71 +83,77 @@ export default function DashboardScreen() {
           
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.cardsRow}>
             <Animated.View entering={FadeInRight.delay(100)}>
-              <GlassCard style={styles.summaryCard} intensity={20}>
-                <LinearGradient
-                  colors={[colors.success + '20', colors.success + '05']}
-                  style={styles.summaryGradient}
-                />
-                <View style={[styles.iconCircle, { backgroundColor: colors.success + '15' }]}>
-                  <MaterialCommunityIcons name="currency-inr" size={24} color={colors.success} />
-                </View>
-                <AnimatedCounter 
-                  value={todayRevenue} 
-                  prefix="₹" 
-                  style={[styles.summaryValue, { color: colors.textPrimary }]} 
-                />
-                <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>
-                  {language === 'hi' ? "आज की कमाई" : "Revenue Today"}
-                </Text>
-                <View style={styles.trendRow}>
-                   <Feather name="trending-up" size={12} color={colors.success} />
-                   <Text style={[styles.trendText, { color: colors.success }]}>+12.5%</Text>
-                </View>
-              </GlassCard>
+              <TouchableOpacity onPress={() => router.push("/(owner)/billing/history" as any)}>
+                <GlassCard style={styles.summaryCard} intensity={20}>
+                  <LinearGradient
+                    colors={[colors.success + '20', colors.success + '05']}
+                    style={styles.summaryGradient}
+                  />
+                  <View style={[styles.iconCircle, { backgroundColor: colors.success + '15' }]}>
+                    <MaterialCommunityIcons name="currency-inr" size={24} color={colors.success} />
+                  </View>
+                  <AnimatedCounter 
+                    value={todayRevenue} 
+                    prefix="₹" 
+                    style={[styles.summaryValue, { color: colors.textPrimary }]} 
+                  />
+                  <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>
+                    {language === 'hi' ? "आज की कमाई" : "Revenue Today"}
+                  </Text>
+                  <View style={styles.trendRow}>
+                     <Feather name="trending-up" size={12} color={colors.success} />
+                     <Text style={[styles.trendText, { color: colors.success }]}>+12.5%</Text>
+                  </View>
+                </GlassCard>
+              </TouchableOpacity>
             </Animated.View>
 
             <Animated.View entering={FadeInRight.delay(200)}>
-              <GlassCard style={styles.summaryCard} intensity={20}>
-                <LinearGradient
-                  colors={[colors.primary + '20', colors.primary + '05']}
-                  style={styles.summaryGradient}
-                />
-                <View style={[styles.iconCircle, { backgroundColor: colors.primary + '15' }]}>
-                  <MaterialCommunityIcons name="receipt" size={24} color={colors.primary} />
-                </View>
-                <AnimatedCounter 
-                  value={todayBills.length} 
-                  style={[styles.summaryValue, { color: colors.textPrimary }]} 
-                />
-                <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>
-                  {language === 'hi' ? "कुल बिल" : "Bills Generated"}
-                </Text>
-                <Text style={[styles.summarySub, { color: colors.textPlaceholder }]}>
-                   {language === 'hi' ? "आज की भीड़" : "Today's traffic"}
-                </Text>
-              </GlassCard>
+              <TouchableOpacity onPress={() => router.push("/(owner)/billing/index" as any)}>
+                <GlassCard style={styles.summaryCard} intensity={20}>
+                  <LinearGradient
+                    colors={[colors.primary + '20', colors.primary + '05']}
+                    style={styles.summaryGradient}
+                  />
+                  <View style={[styles.iconCircle, { backgroundColor: colors.primary + '15' }]}>
+                    <MaterialCommunityIcons name="receipt" size={24} color={colors.primary} />
+                  </View>
+                  <AnimatedCounter 
+                    value={todayBills.length} 
+                    style={[styles.summaryValue, { color: colors.textPrimary }]} 
+                  />
+                  <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>
+                    {language === 'hi' ? "कुल बिल" : "Bills Generated"}
+                  </Text>
+                  <Text style={[styles.summarySub, { color: colors.textPlaceholder }]}>
+                     {language === 'hi' ? "आज की भीड़" : "Today's traffic"}
+                  </Text>
+                </GlassCard>
+              </TouchableOpacity>
             </Animated.View>
 
             <Animated.View entering={FadeInRight.delay(300)}>
-              <GlassCard style={styles.summaryCard} intensity={20}>
-                <LinearGradient
-                  colors={[colors.danger + '20', colors.danger + '05']}
-                  style={styles.summaryGradient}
-                />
-                <View style={[styles.iconCircle, { backgroundColor: colors.danger + '15' }]}>
-                  <MaterialCommunityIcons name="alert-decagram-outline" size={24} color={colors.danger} />
-                </View>
-                <AnimatedCounter 
-                  value={lowStockItems.length} 
-                  style={[styles.summaryValue, { color: colors.textPrimary }]} 
-                />
-                <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>
-                  {language === 'hi' ? "स्टॉक अलर्ट" : "Stock Alerts"}
-                </Text>
-                <Text style={[styles.summarySub, { color: colors.danger }]}>
-                  {language === 'hi' ? "ध्यान दें" : "Needs Attention"}
-                </Text>
-              </GlassCard>
+              <TouchableOpacity onPress={() => router.push("/(owner)/inventory/index" as any)}>
+                <GlassCard style={styles.summaryCard} intensity={20}>
+                  <LinearGradient
+                    colors={[colors.danger + '20', colors.danger + '05']}
+                    style={styles.summaryGradient}
+                  />
+                  <View style={[styles.iconCircle, { backgroundColor: colors.danger + '15' }]}>
+                    <MaterialCommunityIcons name="alert-decagram-outline" size={24} color={colors.danger} />
+                  </View>
+                  <AnimatedCounter 
+                    value={lowStockItems.length} 
+                    style={[styles.summaryValue, { color: colors.textPrimary }]} 
+                  />
+                  <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>
+                    {language === 'hi' ? "स्टॉक अलर्ट" : "Stock Alerts"}
+                  </Text>
+                  <Text style={[styles.summarySub, { color: colors.danger }]}>
+                    {language === 'hi' ? "ध्यान दें" : "Needs Attention"}
+                  </Text>
+                </GlassCard>
+              </TouchableOpacity>
             </Animated.View>
           </ScrollView>
         </View>
@@ -225,7 +231,7 @@ export default function DashboardScreen() {
                       {isCurrent && <View style={[styles.barGlow, { backgroundColor: colors.primary }]} />}
                     </View>
                     <Text style={[styles.barLabel, { color: colors.textSecondary }]}>
-                      {day.date.split("-")[2]}
+                      {day.date.split(/[\s-]+/).pop()}
                     </Text>
                   </View>
                 );
@@ -286,7 +292,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   sectionTitle: { fontSize: 22, fontWeight: "900", letterSpacing: -0.8 },
-  liveIndicator: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#fff', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, elevation: 2 },
+  liveIndicator: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: colors.glassSurface, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, elevation: 2 },
   pulseDot: { width: 6, height: 6, borderRadius: 3 },
   liveText: { fontSize: 10, fontWeight: '900', letterSpacing: 1 },
   viewAll: { fontSize: 14, fontWeight: "800" },

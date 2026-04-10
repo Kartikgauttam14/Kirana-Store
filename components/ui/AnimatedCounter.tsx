@@ -25,7 +25,8 @@ export const AnimatedCounter: React.FC<AnimatedCounterProps> = ({
   const animatedValue = useSharedValue(0);
 
   useEffect(() => {
-    animatedValue.value = withSpring(value, {
+    const safeVal = (value == null || isNaN(value)) ? 0 : value;
+    animatedValue.value = withSpring(safeVal, {
       damping: 15,
       stiffness: 100,
     });
@@ -49,7 +50,8 @@ export const AnimatedCounter: React.FC<AnimatedCounterProps> = ({
 };
 
 const CounterDisplay = ({ style, derivedText, prefix, suffix, value, decimals }: any) => {
-    const [display, setDisplay] = React.useState(`${prefix}${value.toFixed(decimals)}${suffix}`);
+    const safeValue = (value == null || isNaN(value)) ? 0 : value;
+    const [display, setDisplay] = React.useState(`${prefix}${safeValue.toFixed(decimals)}${suffix}`);
     
     // This is a bit of a hack for React Native Text which doesn't love animated values directly
     // In a real production app with Reanimated 3, we'd use a more robust solution
@@ -57,8 +59,9 @@ const CounterDisplay = ({ style, derivedText, prefix, suffix, value, decimals }:
     
     useEffect(() => {
         let interval: any;
-        const startValue = parseFloat(display.replace(prefix, "").replace(suffix, ""));
-        const endValue = value;
+        const parsed = parseFloat(display.replace(prefix, "").replace(suffix, "").replace(/[^0-9.\-]/g, ""));
+        const startValue = isNaN(parsed) ? 0 : parsed;
+        const endValue = (safeValue == null || isNaN(safeValue)) ? 0 : safeValue;
         const duration = 500;
         const startTime = Date.now();
 
@@ -77,7 +80,7 @@ const CounterDisplay = ({ style, derivedText, prefix, suffix, value, decimals }:
 
         interval = requestAnimationFrame(update);
         return () => cancelAnimationFrame(interval);
-    }, [value]);
+    }, [safeValue]);
 
     return <Text style={style}>{display}</Text>;
 };

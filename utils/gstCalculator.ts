@@ -7,15 +7,18 @@ export interface GSTBreakdown {
 }
 
 export function calculateGST(sellingPrice: number, gstRate: number): GSTBreakdown {
-  const taxableAmount = sellingPrice / (1 + gstRate / 100);
-  const totalGST = sellingPrice - taxableAmount;
+  const safePrice = (sellingPrice == null || isNaN(sellingPrice)) ? 0 : sellingPrice;
+  const safeRate = (gstRate == null || isNaN(gstRate)) ? 0 : gstRate;
+  
+  const taxableAmount = safePrice / (1 + safeRate / 100);
+  const totalGST = safePrice - taxableAmount;
 
   return {
-    taxableAmount: +taxableAmount.toFixed(2),
-    cgst: +(totalGST / 2).toFixed(2),
-    sgst: +(totalGST / 2).toFixed(2),
-    totalGST: +totalGST.toFixed(2),
-    totalWithGST: +sellingPrice.toFixed(2),
+    taxableAmount: +(taxableAmount || 0).toFixed(2),
+    cgst: +((totalGST / 2) || 0).toFixed(2),
+    sgst: +((totalGST / 2) || 0).toFixed(2),
+    totalGST: +(totalGST || 0).toFixed(2),
+    totalWithGST: +(safePrice || 0).toFixed(2),
   };
 }
 

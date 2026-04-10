@@ -52,12 +52,12 @@ export function StoreHeader() {
     <>
       <BlurView
         intensity={60}
-        tint="light"
+        tint="dark"
         style={[
           styles.header,
           {
             paddingTop: insets.top + (Platform.OS === "web" ? 12 : 8),
-            backgroundColor: Platform.OS === 'android' ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.6)',
+            backgroundColor: Platform.OS === 'android' ? colors.background : 'rgba(1,8,22,0.7)',
             borderBottomLeftRadius: 32,
             borderBottomRightRadius: 32,
             elevation: 8,

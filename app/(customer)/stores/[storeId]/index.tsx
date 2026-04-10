@@ -142,7 +142,7 @@ export default function StoreDetailScreen() {
            <View style={styles.storeMeta}>
              <View style={styles.metaBadge}>
                 <MaterialCommunityIcons name="star" size={14} color="#FFD700" />
-                <Text style={styles.metaBadgeText}>{store.rating.toFixed(1)}</Text>
+                <Text style={styles.metaBadgeText}>{ (store.rating || 0).toFixed(1) }</Text>
              </View>
              <View style={styles.metaBadge}>
                 <Feather name="clock" size={13} color="#fff" />
@@ -373,7 +373,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 1.5,
     borderColor: 'rgba(0,0,0,0.05)',
-    backgroundColor: '#fff',
+    backgroundColor: 'transparent',
     elevation: 2,
   },
   catText: { fontSize: 13, fontWeight: '800' },
@@ -453,7 +453,7 @@ const styles = StyleSheet.create({
      position: 'absolute',
      top: -6,
      right: -6,
-     backgroundColor: '#fff',
+     backgroundColor: colors.primary,
      borderRadius: 12,
      paddingHorizontal: 6,
      paddingVertical: 2,
@@ -469,7 +469,7 @@ const styles = StyleSheet.create({
      width: 32,
      height: 32,
      borderRadius: 16,
-     backgroundColor: '#fff',
+     backgroundColor: colors.primary,
      alignItems: 'center',
      justifyContent: 'center',
   },

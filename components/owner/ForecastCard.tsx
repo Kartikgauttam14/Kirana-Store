@@ -112,7 +112,7 @@ export function ForecastCard({ forecast }: ForecastCardProps) {
                 key={t}
                 style={[
                   styles.tab,
-                  tab === t && { backgroundColor: '#fff', elevation: 4 },
+                  tab === t && { backgroundColor: colors.primary, elevation: 4 },
                 ]}
                 onPress={() => setTab(t)}
               >

@@ -1,4 +1,5 @@
 export function formatCurrency(amount: number): string {
+  if (amount == null || isNaN(amount)) return "₹0";
   return `₹${amount.toLocaleString("en-IN", {
     minimumFractionDigits: 0,
     maximumFractionDigits: 2,

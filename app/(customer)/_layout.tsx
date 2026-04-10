@@ -34,7 +34,7 @@ export default function CustomerLayout() {
         tabBarInactiveTintColor: colors.mutedForeground,
         tabBarStyle: {
           position: "absolute",
-          backgroundColor: isIOS ? "transparent" : colors.card,
+          backgroundColor: isIOS ? "rgba(1,8,22,0.7)" : colors.card,
           borderTopWidth: 1,
           borderTopColor: colors.border,
           elevation: 0,
@@ -42,7 +42,7 @@ export default function CustomerLayout() {
         },
         tabBarBackground: () =>
           isIOS ? (
-            <BlurView intensity={100} tint="light" style={StyleSheet.absoluteFill} />
+            <BlurView intensity={80} tint="dark" style={StyleSheet.absoluteFill} />
           ) : isWeb ? (
             <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.card }]} />
           ) : null,
@@ -87,6 +87,13 @@ export default function CustomerLayout() {
       />
       <Tabs.Screen name="stores/[storeId]/index" options={{ href: null }} />
       <Tabs.Screen name="orders/[orderId]" options={{ href: null }} />
+      <Tabs.Screen name="profile/addresses" options={{ href: null }} />
+      <Tabs.Screen name="profile/wallet" options={{ href: null }} />
+      <Tabs.Screen name="profile/referral" options={{ href: null }} />
+      <Tabs.Screen name="profile/privacy" options={{ href: null }} />
+      <Tabs.Screen name="profile/help" options={{ href: null }} />
+      <Tabs.Screen name="profile/edit" options={{ href: null }} />
+      <Tabs.Screen name="search/index" options={{ href: null }} />
     </Tabs>
   );
 }

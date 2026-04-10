@@ -49,7 +49,7 @@ export function StoreCard({ store, onPress }: StoreCardProps) {
               {store.name}
             </Text>
             <View style={[styles.ratingBadge, { backgroundColor: colors.successLight }]}>
-              <Text style={[styles.ratingText, { color: colors.success }]}>{store.rating.toFixed(1)}</Text>
+              <Text style={[styles.ratingText, { color: colors.success }]}>{(store.rating || 0).toFixed(1)}</Text>
               <Feather name="star" size={10} color={colors.success} />
             </View>
           </View>

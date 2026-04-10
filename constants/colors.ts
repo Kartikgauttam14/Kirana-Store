@@ -1,70 +1,70 @@
 const colors = {
   light: {
-    text: "#0F172A",
+    text: "#F8FAFC",
     tint: "#10B981", // Organic Green
 
-    background: "#F8FAFC",
-    foreground: "#0F172A",
+    background: "#010816", // Deep Onyx Black
+    foreground: "#F8FAFC",
 
-    card: "#FFFFFF",
-    cardForeground: "#0F172A",
+    card: "#0A121F", // Deep Space Blue/Black
+    cardForeground: "#F8FAFC",
 
-    primary: "#10B981", // Organic Green (Trust, Freshness)
+    primary: "#10B981", // Organic Green
     primaryForeground: "#FFFFFF",
-    primaryLight: "#D1FAE5",
+    primaryLight: "#10B98120",
 
-    secondary: "#6366F1", // Indigo (Tech, Intelligence)
+    secondary: "#6366F1", // Indigo
     secondaryForeground: "#FFFFFF",
-    secondaryLight: "#EEF2FF",
+    secondaryLight: "#6366F120",
 
-    accent: "#F59E0B", // Amber (Energy, Action)
+    accent: "#F59E0B", // Amber
     accentForeground: "#FFFFFF",
-    accentLight: "#FEF3C7",
+    accentLight: "#F59E0B20",
 
     success: "#10B981",
-    successLight: "#D1FAE5",
+    successLight: "#10B98120",
     warning: "#F59E0B",
-    warningLight: "#FEF3C7",
+    warningLight: "#F59E0B20",
     danger: "#EF4444",
-    dangerLight: "#FEE2E2",
+    dangerLight: "#EF444420",
 
-    muted: "#F1F5F9",
-    mutedForeground: "#64748B",
+    muted: "#1E293B",
+    mutedForeground: "#94A3B8",
 
     destructive: "#EF4444",
     destructiveForeground: "#FFFFFF",
 
-    border: "rgba(226, 232, 240, 0.8)",
-    input: "#E2E8F0",
+    border: "#FFFFFF1A",
+    input: "#FFFFFF1A",
 
-    dark: "#0F172A",
-    gray900: "#010816",
+    dark: "#010816",
+    gray900: "#000000",
     gray600: "#475569",
-    gray300: "#CBD5E1",
-    gray100: "#F1F7FF",
+    gray300: "#94A3B8",
+    gray100: "#1E293B",
     white: "#FFFFFF",
 
     // Premium Backgrounds
-    deepBackground: "#020617",
-    sapphire: "#0F172A",
+    deepBackground: "#000000",
+    sapphire: "#020617",
     
-    textPrimary: "#0F172A",
-    textSecondary: "#475569",
-    textPlaceholder: "#94A3B8",
+    textPrimary: "#FFFFFF",
+    textSecondary: "#94A3B8",
+    textPlaceholder: "#64748B",
 
     rupee: "#10B981",
     lowStock: "#F59E0B",
     outOfStock: "#EF4444",
     inStock: "#10B981",
 
-    tabBar: "#FFFFFF",
-    tabBarBorder: "#E2E8F0",
-    overlay: "rgba(15, 23, 42, 0.5)",
+    tabBar: "#010816",
+    tabBarBorder: "#FFFFFF1A",
+    overlay: "#000000CC",
     
     // Liquid Glass Specials
-    glassBorder: "rgba(255, 255, 255, 0.2)",
-    glassSurface: "rgba(255, 255, 255, 0.08)",
-    glassCardDark: "rgba(255, 255, 255, 0.05)",
+    glassBorder: "#FFFFFF20",
+    glassSurface: "#FFFFFF10",
+    glassCardDark: "#00000040",
   },
   radius: {
     sm: 8,

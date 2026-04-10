@@ -1,11 +1,11 @@
-import { Feather } from "@expo/vector-icons";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 import { useColors } from "@/hooks/useColors";
 
 interface EmptyStateProps {
-  icon?: keyof typeof Feather.glyphMap;
+  icon?: keyof typeof MaterialCommunityIcons.glyphMap;
   title: string;
   subtitle?: string;
   actionLabel?: string;
@@ -17,7 +17,7 @@ export function EmptyState({ icon = "inbox", title, subtitle, actionLabel, onAct
   return (
     <View style={styles.container}>
       <View style={[styles.iconCircle, { backgroundColor: colors.muted }]}>
-        <Feather name={icon} size={32} color={colors.mutedForeground} />
+        <MaterialCommunityIcons name={icon} size={32} color={colors.mutedForeground} />
       </View>
       <Text style={[styles.title, { color: colors.textPrimary }]}>{title}</Text>
       {subtitle && (
