@@ -138,7 +138,7 @@ export default function AddProductScreen() {
             key={s}
             style={[
               styles.progressSegment,
-              { backgroundColor: s <= step ? colors.primary : colors.gray200, flex: 1 }
+              { backgroundColor: s <= step ? colors.primary : colors.gray300, flex: 1 }
             ]}
           />
         ))}

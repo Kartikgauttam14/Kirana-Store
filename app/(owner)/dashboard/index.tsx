@@ -18,6 +18,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { StoreHeader } from "@/components/owner/StoreHeader";
 import { useData } from "@/context/DataContext";
 import { useColors } from "@/hooks/useColors";
+import { useAuthStore } from "@/store/authStore";
 import { getStockStatus } from "@/types/inventory.types";
 import { formatCurrency } from "@/utils/formatCurrency";
 import { GlassCard } from "@/components/ui/GlassCard";
@@ -31,6 +32,7 @@ export default function DashboardScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { activeStore, getBillsForStore, getProductsForStore, getDailySales } = useData();
+  const language = useAuthStore((s) => s.language);
 
   const storeId = activeStore?.id ?? "";
   const bills = useMemo(() => getBillsForStore(storeId), [storeId, getBillsForStore]);
